@@ -4,7 +4,9 @@
   "description": "Demos for the appy-style css framework",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "bower":"bower install",
+    "build-js": "browserify -d -t reactify browser/ui.jsx -o browser/bundle.js",
+    "browser": "node browser/start.js"
   },
   "repository": {
     "type": "git",
@@ -17,6 +19,8 @@
   },
   "homepage": "https://github.com/joshmarinacci/appy-style-demos",
   "dependencies": {
-    "node-thrust": "^0.7.6-rc.1"
+    "node-thrust": "^0.7.6-rc.1",
+    "react": "^0.13.1",
+    "reactify": "^1.1.0"
   }
 }
