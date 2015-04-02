@@ -1,0 +1,22 @@
+{
+  "name": "appy-style-demos",
+  "version": "0.0.0",
+  "description": "Demos for the appy-style css framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joshmarinacci/appy-style-demos.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joshmarinacci/appy-style-demos/issues"
+  },
+  "homepage": "https://github.com/joshmarinacci/appy-style-demos",
+  "dependencies": {
+    "node-thrust": "^0.7.6-rc.1"
+  }
+}

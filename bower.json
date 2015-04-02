@@ -1,0 +1,19 @@
+{
+  "name": "appy-style-demos",
+  "version": "0.0.0",
+  "homepage": "https://github.com/joshmarinacci/appy-style-demos",
+  "authors": [
+    "Joshua Marinacci <joshua.marinacci@nokia.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "appy-style": "*"
+  }
+}
