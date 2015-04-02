@@ -1,6 +1,13 @@
 # appy-style-demos
-Demos for the appy-style css framework
+Demos for the appy-style css framework.
 
+AppyStyle CSS framework.
+
+https://github.com/joshmarinacci/appy-style
+
+
+
+# Browser Demo
 
 check out the code then run
 
