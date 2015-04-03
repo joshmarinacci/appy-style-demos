@@ -21,9 +21,11 @@
         }
         #backward-button, #forward-button {
             font-size: 150%;
+            background-color: transparent;
         }
         #play-button {
             font-size: 200%;
+            background-color: transparent;
         }
         #main-header, #main-footer {
             align-items: center;
@@ -33,9 +35,11 @@
             margin: 0.25em;
         }
         #music-display {
-            background-color: white;
+            background-color: #f8f8f8;
             border-radius: 1em;
             padding: 0.5em 3em;
+            margin: 5px 1em;
+            min-width: 20em;
         }
         #display-song { font-size: 150%; }
         #volume { max-width: 5em; }
@@ -44,6 +48,7 @@
             background-color: white;
             height: 6px;
             -webkit-appearance: none;
+            width: 18em;
         }
         #music-display progress::-webkit-progress-bar {
             background-color: #ccc;
@@ -55,7 +60,7 @@
         }
 
         .no-bg {
-            border-width: 0;
+            border-width: 0 !important;
         }
 
         #main-footer span {
@@ -65,15 +70,18 @@
             border-bottom-width: 1px;
             border-bottom-style: solid;
         }
+        #search-box {
+            min-width: 20em;
+        }
     </style>
 </head>
 <body>
 <div class="vbox fill">
     <header id="main-header">
         <div class="group">
-            <button class="fa fa-backward" id="backward-button"></button>
-            <button class="fa fa-play" id="play-button"></button>
-            <button class="fa fa-forward" id="forward-button"></button>
+            <button class="fa fa-backward no-bg" id="backward-button"></button>
+            <button class="fa fa-play no-bg" id="play-button"></button>
+            <button class="fa fa-forward no-bg" id="forward-button"></button>
         </div>
         <div class="group">
             <label class="fa fa-volume-down"></label>
@@ -88,7 +96,7 @@
         </div>
         <span class="grow"></span>
         <span class="grow"></span>
-        <input type="search" placeholder="albums, artists, songs">
+        <input type="search" placeholder="albums, artists, songs" id="search-box">
     </header>
     <div class="hbox grow">
         <div class="vbox" id="sources-pane">
@@ -96,19 +104,19 @@
             <ul class="grow list scroll">
                 <li class="header">Library</li>
                 <ul>
-                    <li><i class="fa fa-music"></i> Music</li>
-                    <li><i class="fa fa-film"></i> Movies</li>
-                    <li><i class="fa fa-rocket"></i> Podcasts</li>
+                    <li><i class="fa fa-music fa-fw"></i> Music</li>
+                    <li><i class="fa fa-film fa-fw"></i> Movies</li>
+                    <li><i class="fa fa-rocket fa-fw"></i> Podcasts</li>
 
                 </ul>
 
                 <li class="header">Playlists</li>
                 <ul>
-                    <li><i class="fa fa-folder-o"></i> Christmas Mix</li>
-                    <li><i class="fa fa-folder-o"></i> Rockin 80s</li>
-                    <li><i class="fa fa-folder-o"></i> Chill down</li>
-                    <li><i class="fa fa-gears"></i> Number One Hits</li>
-                    <li><i class="fa fa-gears"></i> Top ten most played</li>
+                    <li><i class="fa fa-folder-o fa-fw"></i> Christmas Mix</li>
+                    <li><i class="fa fa-folder-o fa-fw"></i> Rockin 80s</li>
+                    <li><i class="fa fa-folder-o fa-fw"></i> Chill down</li>
+                    <li><i class="fa fa-gears fa-fw"></i> Number One Hits</li>
+                    <li><i class="fa fa-gears fa-fw"></i> Top ten most played</li>
                 </ul>
             </ul>
         </div>
