@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link href="../bower_components/appy-style/newstart.css" rel="stylesheet">
+    <link href="../bower_components/font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
+    <style type="text/css">
+        body {
+            font-family: 'Open Sans', sans-serif;
+            font-family: 'Lato', sans-serif;
+            font-weight: 300;
+            font-size: 11pt;
+        }
+        #sources-pane, #artists-pane {
+            min-width: 20em;
+            border-right-width: 1px;
+            border-right-style: solid;
+        }
+        #backward-button, #forward-button {
+            font-size: 150%;
+        }
+        #play-button {
+            font-size: 200%;
+        }
+        #main-header, #main-footer {
+            align-items: center;
+            padding: 0em;
+        }
+        #main-footer button {
+            margin: 0.25em;
+        }
+        #music-display {
+            background-color: white;
+            border-radius: 1em;
+            padding: 0.5em 3em;
+        }
+        #display-song { font-size: 150%; }
+        #volume { max-width: 5em; }
+        #music-display progress {
+            color: black;
+            background-color: white;
+            height: 6px;
+            -webkit-appearance: none;
+        }
+        #music-display progress::-webkit-progress-bar {
+            background-color: #ccc;
+            border-radius: 6px;
+        }
+        #music-display progress::-webkit-progress-value {
+            background-color: #0000FF;
+            border-radius: 6px;
+        }
+
+        .no-bg {
+            border-width: 0;
+        }
+
+        #main-footer span {
+            font-size: 90%;
+        }
+        table th {
+            border-bottom-width: 1px;
+            border-bottom-style: solid;
+        }
+    </style>
+</head>
+<body>
+<div class="vbox fill">
+    <header id="main-header">
+        <div class="group">
+            <button class="fa fa-backward" id="backward-button"></button>
+            <button class="fa fa-play" id="play-button"></button>
+            <button class="fa fa-forward" id="forward-button"></button>
+        </div>
+        <div class="group">
+            <label class="fa fa-volume-down"></label>
+            <input type="range" min="0" max="100" id="volume">
+            <label class="fa fa-volume-up"></label>
+        </div>
+        <span class="grow"></span>
+        <div class="vbox align-center" id="music-display">
+            <span class="grow" id="display-song">song title</span>
+            <span id="display-artist">artist - album</span>
+            <progress min="0" max="100" value="20">
+        </div>
+        <span class="grow"></span>
+        <span class="grow"></span>
+        <input type="search" placeholder="albums, artists, songs">
+    </header>
+    <div class="hbox grow">
+        <div class="vbox" id="sources-pane">
+            <header>Sources</header>
+            <ul class="grow list scroll">
+                <li class="header">Library</li>
+                <ul>
+                    <li><i class="fa fa-music"></i> Music</li>
+                    <li><i class="fa fa-film"></i> Movies</li>
+                    <li><i class="fa fa-rocket"></i> Podcasts</li>
+
+                </ul>
+
+                <li class="header">Playlists</li>
+                <ul>
+                    <li><i class="fa fa-folder-o"></i> Christmas Mix</li>
+                    <li><i class="fa fa-folder-o"></i> Rockin 80s</li>
+                    <li><i class="fa fa-folder-o"></i> Chill down</li>
+                    <li><i class="fa fa-gears"></i> Number One Hits</li>
+                    <li><i class="fa fa-gears"></i> Top ten most played</li>
+                </ul>
+            </ul>
+        </div>
+        <div class="vbox scroll" id="artists-pane">
+            <header>Artists</header>
+            <ul class="list scroll grow">
+                <li>The Beatles</li>
+                <li>The Kinks</li>
+                <li>Muse</li>
+                <li>KoldPlay</li>
+                <li>The Zombies</li>
+            </ul>
+        </div>
+        <div class="vbox grow scroll">
+            <table>
+                <head>
+                    <th>Name</th>
+                    <th>Time</th>
+                    <th>Artist</th>
+                    <th>Album</th>
+                    <th>Genre</th>
+                </head>
+                <tbody>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                <tr>
+                    <td>Yellow Submarine</td>
+                    <td>1:00</td>
+                    <td>The Beatles</td>
+                    <td>Yellow Submarine</td>
+                    <td>Rock</td>
+                </tr>
+                <tr>
+                    <td>Supermassive Black Hole</td>
+                    <td>5:46</td>
+                    <td>Muse</td>
+                    <td>Blackholes and Revelations</td>
+                    <td>Metal</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <footer id="main-footer">
+        <button class="fa fa-plus no-bg"></button>
+        <button class="fa fa-random no-bg"></button>
+        <button class="fa fa-repeat no-bg"></button>
+        <span class="grow"></span>
+        <span>3333 items, 105 hrs total time, 21GB</span>
+        <span class="grow"></span>
+        <button class="fa fa-eject no-bg"></button>
+    </footer>
+</div>
+
+
+</body>
+</html>
