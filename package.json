@@ -4,9 +4,9 @@
   "description": "Demos for the appy-style css framework",
   "main": "index.js",
   "scripts": {
-    "bower":"bower install",
     "build-js": "browserify -d -t reactify browser/ui.jsx -o browser/bundle.js",
-    "browser": "node browser/start.js"
+    "browser": "node browser/start.js",
+    "postinstall": "node_modules/bower/bin/bower install -F"
   },
   "repository": {
     "type": "git",
@@ -19,7 +19,10 @@
   },
   "homepage": "https://github.com/joshmarinacci/appy-style-demos",
   "dependencies": {
+    "bower": "^1.4.1",
+    "fixed-data-table": "^0.1.2",
     "node-thrust": "^0.7.6-rc.1",
+    "object-assign": "^2.0.0",
     "react": "^0.13.1",
     "reactify": "^1.1.0"
   }

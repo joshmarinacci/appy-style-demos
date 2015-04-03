@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="node_modules/react/dist/react.js"></script>
+    <script src="node_modules/react/dist/JSXTransformer.js"></script>
+    <style type="text/css">
+        #body-wrapper {
+            width: -webkit-fit-content;
+            overflow-y: scroll;
+        }
+        #whole-wrapper {
+            overflow-x: scroll;
+        }
+
+        #body-wrapper { height: 90%; }
+        #whole-wrapper { width: 100%; height: 100%; }
+
+
+        th, td {
+            width: 200px;
+            min-width: 200px;
+        }
+
+
+        /* styling */
+        table {
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid gray;
+        }
+        th {
+            background-color: lightgrey;
+        }
+        tr:nth-child(even) {
+            background-color: #eee;
+        }
+
+
+        /* an outside constraint to react against */
+        #constrainer {
+            border: 5px solid red;
+            height: 200px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="constrainer">
+
+<div id="whole-wrapper">
+    <table><thead><th>foo</th><th>foo</th><th>foo</th><th>foo</th></thead></table>
+    <div id="body-wrapper">
+        <table>
+            <tbody>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            <tr><td>foo</td><td>foo</td><td>foo</td><td>foo</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+</body>
+</html>

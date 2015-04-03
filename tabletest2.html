@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="node_modules/react/dist/react.js"></script>
+    <script src="node_modules/react/dist/JSXTransformer.js"></script>
+    <style type="text/css">
+        .table-wrapper {
+            border: 1px solid red;
+            overflow: scroll;
+        }
+        .table-body-wrapper {
+            border: 1px solid green;
+            height: 200px;
+        }
+        table {
+            border: 1px solid blue;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .table-body {
+            border: 1px solid purple;
+        }
+        table td, table th {
+            min-width: 100px;
+            border: 1px solid lightgrey;
+        }
+    </style>
+</head>
+<body>
+<div id="example"></div>
+
+<script type="text/jsx">
+    function genList(n) {
+        var ret = [];
+        for(var i=0; i<n; i++) {
+            ret.push(i);
+        }
+        return ret;
+    }
+    var Table = React.createClass({
+        render: function() {
+            var count = 10;
+            var headers = genList(count).map(function(i) {
+                return <th>column</th>;
+            });
+            var rows = genList(20).map(function(j) {
+                return (<tr>{genList(count).map(function(i){
+                    return <td>foo</td>
+                })}</tr>);
+            });
+            return (
+                    <div className="table-wrapper">
+                        <table><thead>{headers}</thead></table>
+                        <div className="table-body-wrapper">
+                            <table className="table-body"><tbody>{rows}</tbody></table>
+                        </div>
+                    </div>
+            );
+
+        }
+    });
+
+    React.render(<Table/>,document.getElementById('example'));
+</script>
+
+</body>
+</html>
