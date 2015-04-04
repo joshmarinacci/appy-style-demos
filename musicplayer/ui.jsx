@@ -178,23 +178,30 @@ var ScrollTable = React.createClass({
             selectedIndex:n
         });
 
-        var node = this.refs.body.getDOMNode();
-        var st = this.refs.body.getDOMNode().scrollTop;
-        var h = this.refs.body.getDOMNode().offsetHeight;
-        var off = n * 34;
-        if(off < node.scrollTop) {
-            node.scrollTop = off;
+        var child = this.refs['child'+n];
+        var dom = React.findDOMNode(child);
+        dom.focus();
+        /*
+         //var node = this.refs.body.getDOMNode();
+         //var h = this.refs.body.getDOMNode().offsetHeight;
+        var off = dom.offsetTop;
+        if(dom.offsetTop < node.scrollTop) {
+            node.scrollTop = dom.offsetTop;
+            console.log('moving up to ', node.scrollTop);
         }
-        if(off > h+node.scrollTop) {
-            node.scrollTop = off-h;
+        if(dom.offsetTop+dom.offsetHeight > h+node.scrollTop) {
+            node.scrollTop = (dom.offsetTop+dom.offsetHeight)-h;
+            console.log('moving down to ', node.scrollTop);
         }
+        */
     },
     render: function() {
         var self = this;
         var rows = this.state.songs.map(function(song,i) {
             return <SongTableRow
                     song={song}
-                    key={song.uid}
+                    key={i}
+                    ref={"child"+i}
                     index={i}
                     selectedIndex={self.state.selectedIndex}
                     setSelected={self.setSelected}
