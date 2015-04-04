@@ -15,7 +15,7 @@
             font-size: 11pt;
         }
         #sources-pane, #artists-pane {
-            min-width: 20em;
+            min-width: 12em;
             border-right-width: 1px;
             border-right-style: solid;
         }
@@ -89,7 +89,16 @@
         th, td {
             border: 1px solid grey;
             min-width: 200px;
+            overflow: hidden;
             padding: 1em;
+            width: 200px;
+            max-width: 200px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f0f0f0;
         }
 
 
@@ -150,7 +159,8 @@
                 <li>The Zombies</li>
             </ul>
         </div>
-        <div class="vbox grow">
+            <div id="main-table" class="vbox grow"></div>
+            <!--
             <div id="wrapper">
                 <table>
                     <thead>
@@ -449,7 +459,7 @@
                 </div>
 
             </div>
-        </div>
+            -->
     </div>
     <footer id="main-footer">
         <button class="fa fa-plus no-bg"></button>
@@ -464,4 +474,7 @@
 
 
 </body>
+<script src="./bundle.js"></script>
+<script type="text/javascript">
+</script>
 </html>

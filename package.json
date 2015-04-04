@@ -6,6 +6,7 @@
   "scripts": {
     "build-js": "browserify -d -t reactify browser/ui.jsx -o browser/bundle.js",
     "browser": "node browser/start.js",
+    "build-musicplayer": "browserify -d -t reactify musicplayer/ui.jsx -o musicplayer/bundle.js",
     "postinstall": "node_modules/bower/bin/bower install -F"
   },
   "repository": {
@@ -19,10 +20,14 @@
   },
   "homepage": "https://github.com/joshmarinacci/appy-style-demos",
   "dependencies": {
+    "async-walker": "0.0.4",
     "bower": "^1.4.1",
     "fixed-data-table": "^0.1.2",
+    "id3js": "^1.1.3",
+    "node-dir": "^0.1.6",
     "node-thrust": "^0.7.6-rc.1",
     "object-assign": "^2.0.0",
+    "q": "^1.2.0",
     "react": "^0.13.1",
     "reactify": "^1.1.0"
   }
