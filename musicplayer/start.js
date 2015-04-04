@@ -6,6 +6,17 @@ var walker = require('async-walker');
 var id3 = require('id3js');
 var Q = require('q');
 
+function d() {
+    var args = Array.prototype.splice.call(arguments,0);
+    args.forEach(function(arg) {
+        dprint.apply(null, [arg]);
+    });
+}
+
+function dprint(obj) {
+    console.log(JSON.stringify(obj,null,'  '));
+}
+
 require('node-thrust')(function(err, api) {
     var url = 'file://'+__dirname + '/ui.html';
     console.log("opening",url);
@@ -15,6 +26,9 @@ require('node-thrust')(function(err, api) {
     win.on('closed',function(){
         console.log("the window was closed");
         api.exit();
+    });
+    win.on('remote', function(msg) {
+        d("got the message",msg);
     });
 
     startMP3Scan(win);
@@ -69,6 +83,10 @@ function startMP3Scan(win) {
 
     var songs = [];
 
+    function generateUID() {
+        return "id_"+Math.floor(Math.random()*1000*1000*1000);
+    }
+
     function addMP3ToDatabase(file, tags) {
         if (tags.title) tags.title = tags.title.replace(/\0/g, '');
         if (tags.artist) tags.artist = tags.artist.replace(/\0/g, '');
@@ -76,7 +94,9 @@ function startMP3Scan(win) {
         var song = {
             title: tags.title,
             artist: tags.artist,
-            album: tags.album
+            album: tags.album,
+            file: file,
+            uid: generateUID()
         };
         songs.push(song);
         win.remote({
