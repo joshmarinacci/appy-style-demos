@@ -22,3 +22,9 @@ npm run build-js
 npm run browser
 ```
 
+# Music Demo
+
+```
+npm install
+npm run build-musicplayer
+npm run musicplayer

@@ -18,9 +18,15 @@ var SongDatabase = {
         var self = this;
         if(this.isThrust()) {
             THRUST.remote.listen(function (msg) {
-                if (!msg.type == 'song-added') return;
+                console.log("got message of type" + JSON.stringify(msg,null,'  '));
+                if(msg.type == "player-status") {
+                    self.setStatus(msg.status);
+                    return;
+                }
+                if (msg.type !== 'song-added') return;
                 self.addSong(msg.song);
             });
+            THRUST.remote.send({type:'running'});
         } else {
             for (var i = 0; i < 100; i++) {
                 this.songs.push({title: 'foo bar baz mister foo bar baz and stuff', artist: 'bar', album: 'baz'});
@@ -47,10 +53,21 @@ var SongDatabase = {
     playSong: function(song) {
         if(this.isThrust()) {
             THRUST.remote.send({
-                action:'play',
-                song:song
+                type:'method',
+                target:'player',
+                method:'play',
+                arguments:[song]
             });
         };
+    },
+    status: null,
+    setStatus: function(status) {
+        console.log("new status = " + JSON.stringify(status,null,'  '));
+        this.status = status;
+        this.notify();
+    },
+    getStatus: function() {
+        return this.status;
     }
 };
 
@@ -127,3 +144,36 @@ var ScrollTable = React.createClass({
 });
 
 React.render(<ScrollTable/>, document.getElementById("main-table"));
+
+var MusicDisplay = React.createClass({
+    getInitialState: function() {
+        return {
+            title:'---',
+            artist:'---',
+            album:'---'
+        }
+    },
+    componentDidMount: function() {
+        var self = this;
+        SongDatabase.onChange('player',function() {
+            console.log("new status = ", SongDatabase.getStatus());
+            var status = SongDatabase.getStatus();
+            self.setState({
+                title: status.song.title,
+                artist: status.song.artist[0],
+                album: status.song.album
+            })
+        })
+    },
+    render: function() {
+        console.log("this state = ")
+        return (<div className="vbox">
+            <span className="grow" id="display-song">{this.state.title}</span>
+            <span id="display-artist">{this.state.artist} - {this.state.album}</span>
+            <progress min="0" max="100" value="20"/>
+            </div>)
+    }
+});
+
+
+React.render(<MusicDisplay/>, document.getElementById("music-display"));
