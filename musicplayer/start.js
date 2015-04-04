@@ -1,6 +1,28 @@
 /**
  * Created by josh on 4/3/15.
  */
+
+
+/*
+
+make a generic method router
+
+type: method,
+target: 'player',
+method:'play',
+arguments:[]
+
+maps to
+
+object_registry.player.play(arguments)
+
+
+player object
+    play():  sends event on status change
+    getState: returns state: song info, total time, current time, etc.
+        repeat, shuffle, etc.
+
+ */
 var fs = require('fs');
 var walker = require('async-walker');
 var id3 = require('id3js');
