@@ -74,27 +74,24 @@
             min-width: 20em;
         }
 
-
-
-        #body-wrapper {
-            width: -webkit-fit-content;
-            overflow-y: scroll;
-        }
-        #whole-wrapper {
-            overflow-x: scroll;
-        }
-
-        #body-wrapper {
-        }
-        #whole-wrapper {
-            flex: 1;
+        #wrapper {
             display: flex;
             flex-direction: column;
+            align-items: flex-start;
+            overflow-x: scroll;
+            overflow-y: hidden;
         }
-        td, th {
-            width: 200px;
+        #body {
+            flex: 1;
+            overflow-x: hidden;
+            overflow-y: scroll;
+        }
+        th, td {
+            border: 1px solid grey;
             min-width: 200px;
+            padding: 1em;
         }
+
 
     </style>
 </head>
@@ -154,7 +151,7 @@
             </ul>
         </div>
         <div class="vbox grow">
-            <div id="whole-wrapper">
+            <div id="wrapper">
                 <table>
                     <thead>
                         <th>Name</th>
@@ -164,7 +161,7 @@
                         <th>Genre</th>
                     </thead>
                 </table>
-                <div id="body-wrapper">
+                <div id="body">
                     <table>
                         <tbody>
                         <tr>
