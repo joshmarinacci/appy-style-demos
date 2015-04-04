@@ -4,6 +4,8 @@ var React = require('react');
 
 var SongDatabase = {
     songs:[],
+    artists_map:{"all":"all"},
+    artists_list:["all"],
     cbs:[],
     selected:null,
     onChange: function(type,cb) {
@@ -18,7 +20,7 @@ var SongDatabase = {
         var self = this;
         if(this.isThrust()) {
             THRUST.remote.listen(function (msg) {
-                console.log("got message of type" + JSON.stringify(msg,null,'  '));
+                console.log("got message of type" + JSON.stringify(msg.type,null,'  '));
                 if(msg.type == "player-status") {
                     self.setStatus(msg.status);
                     return;
@@ -28,9 +30,13 @@ var SongDatabase = {
             });
             THRUST.remote.send({type:'running'});
         } else {
-            for (var i = 0; i < 100; i++) {
-                this.songs.push({title: i+' foo bar baz mister foo bar baz and stuff', artist: 'bar', album: 'baz'});
-            }
+            var artists = ["foo","bar","baz"];
+            var self = this;
+            artists.forEach(function(artist) {
+                for (var i = 0; i < 12; i++) {
+                    self.addSong({title: i+' foo bar baz mister foo bar baz and stuff', artist: artist, album: 'baz'});
+                }
+            });
         }
     },
     isThrust: function() {
@@ -38,10 +44,26 @@ var SongDatabase = {
     },
     addSong: function(song) {
         this.songs.push(song);
+        if(!this.artists_map[song.artist]) {
+            this.artists_map[song.artist] = song.artist;
+            this.artists_list.push(song.artist);
+        }
         this.notify();
+    },
+    getArtists: function() {
+        return this.artists_list;
     },
     getSongs: function() {
         return this.songs;
+    },
+    getFilteredSongs: function() {
+        if(this.selectedArtist == null) {
+            return this.songs;
+        }
+        if(this.selectedArtist == 'all') {
+            return this.songs;
+        }
+        return this.getSongsForArtist(this.selectedArtist);
     },
     getSelected: function() {
         return this.selected;
@@ -75,6 +97,16 @@ var SongDatabase = {
         var song = this.songs[n];
         this.selected = song;
         this.notify();
+    },
+    selectedArtist: null,
+    setSelectedArtist: function(artist) {
+        this.selectedArtist = artist;
+        this.notify();
+    },
+    getSongsForArtist: function(artist) {
+        return this.songs.filter(function(song) {
+            return (song.artist.toString() == artist.toString())
+        });
     }
 };
 
@@ -133,7 +165,7 @@ var SongTableRow = React.createClass({
 
 var ScrollTable = React.createClass({
     getInitialState: function() {
-        var songs = SongDatabase.getSongs();
+        var songs = SongDatabase.getFilteredSongs();
         return {
             songs:songs,
             selectedIndex:0
@@ -143,7 +175,7 @@ var ScrollTable = React.createClass({
         var self = this;
         SongDatabase.onChange('song-added',function() {
             self.setState({
-                songs: SongDatabase.getSongs()
+                songs: SongDatabase.getFilteredSongs()
             })
         });
     },
@@ -235,6 +267,89 @@ var ScrollTable = React.createClass({
 
 React.render(<ScrollTable/>, document.getElementById("main-table"));
 
+var ScrollListItem = React.createClass({
+    click: function() {
+        this.props.setSelected(this.props.item);
+    },
+    render: function() {
+        var cn = "";
+        if(this.props.item == this.props.selected) {
+            cn += " selected";
+        }
+        return <li className={cn} onClick={this.click}>{this.props.item.toString()}</li>
+    }
+});
+
+var ScrollList = React.createClass({
+    getInitialState:function() {
+        return {
+            items: SongDatabase.getArtists(),
+            selected:null,
+            selectedIndex:-1
+        }
+    },
+    componentDidMount: function() {
+        var self = this;
+        SongDatabase.onChange('song-added',function() {
+            self.setState({
+                songs: SongDatabase.getArtists()
+            })
+        });
+    },
+    setSelected: function(item) {
+        var n = this.state.items.indexOf(item);
+        this.setState({
+            selected: item,
+            selectedIndex:n
+        });
+        this.refs.ul.getDOMNode().focus();
+        SongDatabase.setSelectedArtist(item);
+    },
+    setSelectedIndex: function(n) {
+        if(n < 0) n = 0;
+        if(n > this.state.items.length-1) n = this.state.items.length-1;
+        var item = this.state.items[n];
+        this.setState({
+            selected: item,
+            selectedIndex: n
+        });
+        this.refs.ul.getDOMNode().focus();
+        SongDatabase.setSelectedArtist(item);
+    },
+    keyDown: function(e) {
+        if(e.key == 'ArrowDown') {
+            this.setSelectedIndex(this.state.selectedIndex+1);
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+        }
+        if(e.key == 'ArrowUp') {
+            this.setSelectedIndex(this.state.selectedIndex-1);
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+        }
+    },
+    render: function() {
+        var self = this;
+        var rows = this.state.items.map(function(item,i) {
+            return <ScrollListItem
+                key={i}
+                item={item}
+                ref={'child'+i}
+                selected={self.state.selected}
+                setSelected={self.setSelected}/>
+        });
+        return (
+            <ul ref='ul' className="list scroll grow" tabIndex="0"
+                onKeyDown={this.keyDown}
+                >{rows}</ul>
+        )
+    }
+});
+
+React.render(<ScrollList/>, document.getElementById("artists-list"));
+
 var MusicDisplay = React.createClass({
     getInitialState: function() {
         return {
@@ -246,14 +361,14 @@ var MusicDisplay = React.createClass({
     componentDidMount: function() {
         var self = this;
         SongDatabase.onChange('player',function() {
-            /*
-            console.log("new status = ", SongDatabase.getStatus());
             var status = SongDatabase.getStatus();
-            self.setState({
-                title: status.song.title,
-                artist: status.song.artist[0],
-                album: status.song.album
-            })*/
+            if(status) {
+                self.setState({
+                    title: status.song.title,
+                    artist: status.song.artist[0],
+                    album: status.song.album
+                })
+            }
         })
     },
     render: function() {

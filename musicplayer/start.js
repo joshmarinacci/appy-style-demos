@@ -111,8 +111,8 @@ function q_seq_map(array,fun) {
 var window = null;
 function startMP3Scan(win) {
     window = win;
-    //var start_path = "/Users/josh/Music/iTunes/iTunes Media/Music";
-    var start_path = "/Volumes/PieHole/Mp3Archive/iTunes/Yes";
+    var start_path = "/Users/josh/Music/iTunes/iTunes Media/Music";
+    //var start_path = "/Volumes/PieHole/Mp3Archive/iTunes/Yes";
     console.log("scanning from ", start_path);
 
     walker.filter(start_path, function (file) {

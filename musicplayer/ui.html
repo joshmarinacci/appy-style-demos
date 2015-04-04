@@ -87,7 +87,6 @@
             overflow-y: scroll;
         }
         th, td {
-            border: 1px solid grey;
             min-width: 200px;
             overflow: hidden;
             padding: 1em;
@@ -97,13 +96,6 @@
             text-overflow: ellipsis;
         }
 
-        tr:nth-child(even) {
-            background-color: #f8f8f8;
-        }
-        tr.selected {
-            background-color: blue;
-            color: white;
-        }
         tr {
             user-select: none;
             -webkit-user-select: none;
@@ -155,13 +147,7 @@
         </div>
         <div class="vbox scroll" id="artists-pane">
             <header>Artists</header>
-            <ul class="list scroll grow">
-                <li>The Beatles</li>
-                <li>The Kinks</li>
-                <li>Muse</li>
-                <li>KoldPlay</li>
-                <li>The Zombies</li>
-            </ul>
+            <div id="artists-list"></div>
         </div>
         <div id="main-table" class="vbox grow"></div>
     </div>
