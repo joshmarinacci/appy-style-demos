@@ -6,7 +6,11 @@ var SongDatabase = {
     artists_map:{"All":"All"},
     artists_list:["All"],
     cbs:[],
+    progcbs:[],
     selected:null,
+    onProgress: function(cb) {
+        this.progcbs.push(cb);
+    },
     onChange: function(type,cb) {
         this.cbs.push(cb);
     },
@@ -71,6 +75,7 @@ var SongDatabase = {
         this.selected = song;
         this.notify();
     },
+    playing: false,
     playSong: function(song) {
         if(this.isThrust()) {
             THRUST.remote.send({
@@ -80,7 +85,29 @@ var SongDatabase = {
                 arguments:[song]
             });
         };
+        this.playing = true;
+        this.notify();
     },
+    isPlaying: function() {
+        return this.playing;
+    },
+    pauseSongIfPlaying: function() {
+        this.playing = false;
+        this.notify();
+    },
+    startNextTrack: function() {
+
+    },
+    startPrevTrack: function() {
+
+    },
+    setVolume: function(vol) {
+        this.volume = vol;
+    },
+    getVolume: function() {
+        return this.volume;
+    },
+
     status: null,
     setStatus: function(status) {
         console.log("new status = " + JSON.stringify(status,null,'  '));
@@ -312,12 +339,40 @@ var sources = [
 ];
 
 var MainView = React.createClass({
+    getInitialState: function() {
+        return {
+            playing: false
+        }
+    },
+    componentDidMount: function() {
+        var self = this;
+        SongDatabase.onChange("state",function(){
+            console.log("state changed");
+            self.setState({
+                playing: SongDatabase.isPlaying()
+            })
+        });
+    },
+    playPressed: function() {
+        console.log("pressed play");
+        if(SongDatabase.isPlaying()) {
+            SongDatabase.pauseSongIfPlaying();
+        } else {
+            SongDatabase.playSong(SongDatabase.getSelected());
+        }
+    },
    render: function() {
+       var playButtonClass = "fa no-bg";
+       if(SongDatabase.isPlaying()) {
+           playButtonClass += " fa-pause";
+       } else {
+           playButtonClass += " fa-play";
+       }
         return (<div className="vbox fill">
             <header id="main-header">
                 <div className="group">
                     <button className="fa fa-backward no-bg" id="backward-button"></button>
-                    <button className="fa fa-play no-bg" id="play-button"></button>
+                    <button className={playButtonClass} id="play-button" onClick={this.playPressed}></button>
                     <button className="fa fa-forward no-bg" id="forward-button"></button>
                 </div>
                 <div className="group">
