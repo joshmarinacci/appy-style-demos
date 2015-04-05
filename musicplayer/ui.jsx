@@ -1,9 +1,10 @@
 var React = require('react');
+var CustomList = require('./CustomList.jsx');
 
 var SongDatabase = {
     songs:[],
-    artists_map:{"all":"all"},
-    artists_list:["all"],
+    artists_map:{"All":"All"},
+    artists_list:["All"],
     cbs:[],
     selected:null,
     onChange: function(type,cb) {
@@ -58,7 +59,7 @@ var SongDatabase = {
         if(this.selectedArtist == null) {
             return this.songs;
         }
-        if(this.selectedArtist == 'all') {
+        if(this.selectedArtist == 'All') {
             return this.songs;
         }
         return this.getSongsForArtist(this.selectedArtist);
@@ -262,7 +263,7 @@ var ScrollTable = React.createClass({
             </div>)
     }
 });
-
+/*
 var ScrollListItem = React.createClass({
     click: function() {
         this.props.setSelected(this.props.item);
@@ -343,6 +344,14 @@ var ScrollList = React.createClass({
         )
     }
 });
+*/
+
+var SourcesCustomizer = function(item) {
+    if(item.type == 'header') {
+        return <li className='header'>{item.title}</li>;
+    }
+    return (<li className='indent'><i className={item.icon}></i> <span>{item.title}</span></li>);
+}
 
 var MusicDisplay = React.createClass({
     getInitialState: function() {
@@ -374,6 +383,16 @@ var MusicDisplay = React.createClass({
     }
 });
 
+var sources = [
+    { type: 'header', title:'Library'},
+    { type: 'source', title:'Music', icon:'fa fa-music fa-fw'},
+    { type: 'source', title:'Movies', icon:'fa fa-film fa-fw'},
+    { type: 'source', title:'Podcast', icon:'fa fa-rocket fa-fw'},
+    { type: 'header', title:'Playlists'},
+    { type: 'source', title:'Number One Hits', icon:'fa fa-gears fa-fw'},
+    { type: 'source', title:'10 Most Played', icon:'fa fa-gears fa-fw'},
+];
+
 var MainView = React.createClass({
    render: function() {
         return (<div className="vbox fill">
@@ -397,11 +416,14 @@ var MainView = React.createClass({
             <div className="hbox grow">
                 <div className="vbox" id="sources-pane">
                     <header>Sources</header>
-                    <ScrollList/>
+                    <CustomList items={sources} customizer={SourcesCustomizer}/>
                 </div>
                 <div className="vbox scroll" id="artists-pane">
                     <header>Artists</header>
-                    <ScrollList/>
+                    <CustomList items={SongDatabase.getArtists()} onSelect={function(item,n) {
+                        SongDatabase.setSelectedArtist(item);
+                        console.log(item);
+                        }} />
                 </div>
                 <ScrollTable className='vbox grow'/>
             </div>
