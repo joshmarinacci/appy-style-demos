@@ -2,6 +2,7 @@ var React = require('react');
 
 var CustomListItem = React.createClass({
     click: function() {
+        if(this.refs.item.props.disabled == true) return;
         this.props.setSelected(this.props.item);
     },
     render: function() {
@@ -16,6 +17,7 @@ var CustomListItem = React.createClass({
         return React.cloneElement(elem,
             {
                 className:cn,
+                ref:'item',
                 onClick:this.click
             }
         );

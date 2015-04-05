@@ -348,10 +348,10 @@ var ScrollList = React.createClass({
 
 var SourcesCustomizer = function(item) {
     if(item.type == 'header') {
-        return <li className='header'>{item.title}</li>;
+        return <li className='header' disabled={true}>{item.title}</li>;
     }
     return (<li className='indent'><i className={item.icon}></i> <span>{item.title}</span></li>);
-}
+};
 
 var MusicDisplay = React.createClass({
     getInitialState: function() {
@@ -425,7 +425,9 @@ var MainView = React.createClass({
                         console.log(item);
                         }} />
                 </div>
-                <ScrollTable className='vbox grow'/>
+                <div className='vbox grow'>
+                    <ScrollTable/>
+                </div>
             </div>
             <footer id="main-footer">
                 <button className="fa fa-plus no-bg"></button>
