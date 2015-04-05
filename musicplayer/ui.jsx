@@ -1,7 +1,5 @@
 var React = require('react');
 
-
-
 var SongDatabase = {
     songs:[],
     artists_map:{"all":"all"},
@@ -265,8 +263,6 @@ var ScrollTable = React.createClass({
     }
 });
 
-React.render(<ScrollTable/>, document.getElementById("main-table"));
-
 var ScrollListItem = React.createClass({
     click: function() {
         this.props.setSelected(this.props.item);
@@ -348,8 +344,6 @@ var ScrollList = React.createClass({
     }
 });
 
-React.render(<ScrollList/>, document.getElementById("artists-list"));
-
 var MusicDisplay = React.createClass({
     getInitialState: function() {
         return {
@@ -372,8 +366,7 @@ var MusicDisplay = React.createClass({
         })
     },
     render: function() {
-        console.log("this state = ")
-        return (<div className="vbox">
+        return (<div className="vbox align-center" id="music-display">
             <span className="grow" id="display-song">{this.state.title}</span>
             <span id="display-artist">{this.state.artist} - {this.state.album}</span>
             <progress min="0" max="100" value="20"/>
@@ -381,5 +374,66 @@ var MusicDisplay = React.createClass({
     }
 });
 
+var MainView = React.createClass({
+   render: function() {
+        return (<div className="vbox fill">
+            <header id="main-header">
+                <div className="group">
+                    <button className="fa fa-backward no-bg" id="backward-button"></button>
+                    <button className="fa fa-play no-bg" id="play-button"></button>
+                    <button className="fa fa-forward no-bg" id="forward-button"></button>
+                </div>
+                <div className="group">
+                    <label className="fa fa-volume-down"></label>
+                    <input type="range" min="0" max="100" id="volume"/>
+                    <label className="fa fa-volume-up"></label>
+                </div>
+                <span className="grow"></span>
+                <MusicDisplay/>
+                <span className="grow"></span>
+                <span className="grow"></span>
+                <input type="search" placeholder="albums, artists, songs" id="search-box"/>
+            </header>
+            <div className="hbox grow">
+                <div className="vbox" id="sources-pane">
+                    <header>Sources</header>
+                    <ul className="grow list scroll">
+                        <li className="header">Library</li>
+                        <ul>
+                            <li><i className="fa fa-music fa-fw"></i> Music</li>
+                            <li><i className="fa fa-film fa-fw"></i> Movies</li>
+                            <li><i className="fa fa-rocket fa-fw"></i> Podcasts</li>
 
-React.render(<MusicDisplay/>, document.getElementById("music-display"));
+                        </ul>
+
+                        <li className="header">Playlists</li>
+                        <ul>
+                            <li><i className="fa fa-folder-o fa-fw"></i> Christmas Mix</li>
+                            <li><i className="fa fa-folder-o fa-fw"></i> Rockin 80s</li>
+                            <li><i className="fa fa-folder-o fa-fw"></i> Chill down</li>
+                            <li><i className="fa fa-gears fa-fw"></i> Number One Hits</li>
+                            <li><i className="fa fa-gears fa-fw"></i> Top ten most played</li>
+                        </ul>
+                    </ul>
+                </div>
+                <div className="vbox scroll" id="artists-pane">
+                    <header>Artists</header>
+                    <ScrollList/>
+                </div>
+                <ScrollTable className='vbox grow'/>
+            </div>
+            <footer id="main-footer">
+                <button className="fa fa-plus no-bg"></button>
+                <button className="fa fa-random no-bg"></button>
+                <button className="fa fa-repeat no-bg"></button>
+                <span className="grow"></span>
+                <span>3333 items, 105 hrs total time, 21GB</span>
+                <span className="grow"></span>
+                <button className="fa fa-eject no-bg"></button>
+            </footer>
+        </div>
+     );
+   }
+});
+
+React.render(<MainView/>, document.getElementById("main-view"));
