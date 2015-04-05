@@ -397,24 +397,7 @@ var MainView = React.createClass({
             <div className="hbox grow">
                 <div className="vbox" id="sources-pane">
                     <header>Sources</header>
-                    <ul className="grow list scroll">
-                        <li className="header">Library</li>
-                        <ul>
-                            <li><i className="fa fa-music fa-fw"></i> Music</li>
-                            <li><i className="fa fa-film fa-fw"></i> Movies</li>
-                            <li><i className="fa fa-rocket fa-fw"></i> Podcasts</li>
-
-                        </ul>
-
-                        <li className="header">Playlists</li>
-                        <ul>
-                            <li><i className="fa fa-folder-o fa-fw"></i> Christmas Mix</li>
-                            <li><i className="fa fa-folder-o fa-fw"></i> Rockin 80s</li>
-                            <li><i className="fa fa-folder-o fa-fw"></i> Chill down</li>
-                            <li><i className="fa fa-gears fa-fw"></i> Number One Hits</li>
-                            <li><i className="fa fa-gears fa-fw"></i> Top ten most played</li>
-                        </ul>
-                    </ul>
+                    <ScrollList/>
                 </div>
                 <div className="vbox scroll" id="artists-pane">
                     <header>Artists</header>
