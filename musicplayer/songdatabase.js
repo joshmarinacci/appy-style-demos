@@ -25,14 +25,12 @@ var artists_index = {};
 
 function calculateArtists() {
     return Q.Promise(function (resolve, reject, notify) {
-        console.log("calculating artists");
         //fetch all songs w/ only the artist field
         db.find({},{artist:1}, function(err,docs) {
             docs.forEach(function(doc){
                 var at = doc.artist[0];
                 artists_index[at] = at;
             });
-            console.log(artists_index);
             resolve();
         });
     });

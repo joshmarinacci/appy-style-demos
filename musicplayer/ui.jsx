@@ -1,5 +1,6 @@
 var React = require('react');
 var CustomList = require('./CustomList.jsx');
+var moment = require('moment');
 
 var SongDatabase = {
     songs:[],
@@ -201,6 +202,7 @@ var SongTableRow = React.createClass({
         if(selected) {
             cn = "selected";
         }
+        var dur = moment.duration(song.duration,'seconds');
         return <tr ref='row' tabIndex="1"
                    className={cn}
                    onClick={this.clicked}
@@ -209,7 +211,7 @@ var SongTableRow = React.createClass({
                    onKeyDown={this.keydown}
             >
             <td>{song.title}</td>
-            <td>00:00</td>
+            <td>{dur.minutes()}:{dur.seconds()}</td>
             <td>{song.artist}</td>
             <td>{song.album}</td>
             <td>{song.genre}</td>
