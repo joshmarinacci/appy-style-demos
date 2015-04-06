@@ -5,17 +5,22 @@ var SongDatabase = {
     songs:[],
     artists_map:{"All":"All"},
     artists_list:["All"],
-    cbs:[],
+    cbs:{},
     progcbs:[],
+    thrust_cbs:{},
     selected:null,
-    onProgress: function(cb) {
-        this.progcbs.push(cb);
-    },
     onChange: function(type,cb) {
-        this.cbs.push(cb);
+        if(!this.cbs[type]) {
+            this.cbs[type] = [];
+        }
+        this.cbs[type].push(cb);
     },
-    notify: function() {
-        this.cbs.forEach(function(cb){
+    notify: function(type) {
+        if(!this.cbs[type]) {
+            console.log("WARNING. No callbacks of type " + type);
+            return;
+        }
+        this.cbs[type].forEach(function(cb){
             cb();
         });
     },
@@ -23,7 +28,18 @@ var SongDatabase = {
         var self = this;
         if(this.isThrust()) {
             THRUST.remote.listen(function (msg) {
-                console.log("got message of type" + JSON.stringify(msg.type,null,'  '));
+                //console.log("got message of type" + JSON.stringify(msg.type,null,'  '));
+                if(msg.type == 'callback') {
+                    if(self.thrust_cbs[msg.callbackid]) {
+                        self.thrust_cbs[msg.callbackid](msg.value);
+                        delete self.thrust_cbs[msg.callbackid];
+                    }
+                    return;
+                }
+                if(msg.type == 'database-loaded') {
+                    self.notify('database-loaded');
+                    return;
+                }
                 if(msg.type == "player-status") {
                     self.setStatus(msg.status);
                     return;
@@ -53,20 +69,23 @@ var SongDatabase = {
         }
         this.notify();
     },
-    getArtists: function() {
-        return this.artists_list;
+
+    getArtists: function(cb) {
+        if(this.isThrust()) {
+            var id = 'id_'+Math.random();
+            this.thrust_cbs[id] = cb;
+            THRUST.remote.send({
+                id:id,
+                type:'method',
+                target:'database',
+                method:'getArtists'
+            });
+        }
+        return [];
     },
     getSongs: function() {
+        console.log("get songs called");
         return this.songs;
-    },
-    getFilteredSongs: function() {
-        if(this.selectedArtist == null) {
-            return this.songs;
-        }
-        if(this.selectedArtist == 'All') {
-            return this.songs;
-        }
-        return this.getSongsForArtist(this.selectedArtist);
     },
     getSelected: function() {
         return this.selected;
@@ -129,10 +148,19 @@ var SongDatabase = {
         this.selectedArtist = artist;
         this.notify();
     },
-    getSongsForArtist: function(artist) {
-        return this.songs.filter(function(song) {
-            return (song.artist.toString() == artist.toString())
-        });
+    getSongsForArtist: function(artist, cb) {
+        if(this.isThrust()) {
+            var id = 'id_'+Math.random();
+            this.thrust_cbs[id] = cb;
+            THRUST.remote.send({
+                id:id,
+                type:'method',
+                target:'database',
+                method:'getSongsForArtist',
+                arguments:[artist]
+            });
+        }
+        return [];
     }
 };
 
@@ -191,19 +219,9 @@ var SongTableRow = React.createClass({
 
 var ScrollTable = React.createClass({
     getInitialState: function() {
-        var songs = SongDatabase.getFilteredSongs();
         return {
-            songs:songs,
             selectedIndex:0
         }
-    },
-    componentDidMount: function() {
-        var self = this;
-        SongDatabase.onChange('song-added',function() {
-            self.setState({
-                songs: SongDatabase.getFilteredSongs()
-            })
-        });
     },
     keypress: function(e) {
         console.log("got a key event");
@@ -231,7 +249,7 @@ var ScrollTable = React.createClass({
     },
     setSelected: function(n) {
         if(n < 0) n = 0;
-        if(n >= this.state.songs.length) n = this.state.songs.length-1;
+        if(n >= this.props.items.length) n = this.props.items.length-1;
         this.setState({
             selectedIndex:n
         });
@@ -255,9 +273,9 @@ var ScrollTable = React.createClass({
     },
     render: function() {
         var self = this;
-        var rows = this.state.songs.map(function(song,i) {
+        var rows = this.props.items.map(function(item,i) {
             return <SongTableRow
-                    song={song}
+                    song={item}
                     key={i}
                     ref={"child"+i}
                     index={i}
@@ -341,25 +359,35 @@ var sources = [
 var MainView = React.createClass({
     getInitialState: function() {
         return {
-            playing: false
+            playing: false,
+            artists: [],
+            songs:[]
         }
     },
     componentDidMount: function() {
         var self = this;
-        SongDatabase.onChange("state",function(){
-            console.log("state changed");
-            self.setState({
-                playing: SongDatabase.isPlaying()
-            })
+        SongDatabase.onChange("database-loaded",function(){
+            SongDatabase.getArtists(function(artists) {
+                self.setState({
+                    artists:artists
+                })
+            });
         });
     },
     playPressed: function() {
-        console.log("pressed play");
         if(SongDatabase.isPlaying()) {
             SongDatabase.pauseSongIfPlaying();
         } else {
             SongDatabase.playSong(SongDatabase.getSelected());
         }
+    },
+    selectArtist: function(artist) {
+        var self = this;
+        SongDatabase.getSongsForArtist(artist, function(songs) {
+            self.setState({
+                songs: songs
+            })
+        });
     },
    render: function() {
        var playButtonClass = "fa no-bg";
@@ -393,13 +421,10 @@ var MainView = React.createClass({
                 </div>
                 <div className="vbox scroll" id="artists-pane">
                     <header>Artists</header>
-                    <CustomList items={SongDatabase.getArtists()} onSelect={function(item,n) {
-                        SongDatabase.setSelectedArtist(item);
-                        console.log(item);
-                        }} />
+                    <CustomList items={this.state.artists} onSelect={this.selectArtist}/>
                 </div>
                 <div className='vbox grow'>
-                    <ScrollTable/>
+                    <ScrollTable items={this.state.songs}/>
                 </div>
             </div>
             <footer id="main-footer">

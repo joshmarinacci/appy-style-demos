@@ -24,12 +24,9 @@ player object
 
  */
 var fs = require('fs');
-var walker = require('async-walker');
-var id3 = require('id3js');
-var Q = require('q');
-var mm = require('musicmetadata');
 var lame = require('lame');
 var Speaker = require('speaker');
+var DB = require('./songdatabase');
 
 function d() {
     var args = Array.prototype.splice.call(arguments,0);
@@ -54,12 +51,12 @@ function startApp() {
             api.exit();
         });
         win.on('remote', function (msg) {
-            d("got the message", msg);
+            //d("got the message", msg);
             if(msg.message.type == 'running') {
-                startMP3Scan(win);
+                DB.startMP3Scan(win);
             }
             if(msg.message.type == 'method') {
-                dispatchMethod(msg.message);
+                dispatchMethod(msg.message,win);
             }
         });
     });
@@ -87,101 +84,30 @@ object_registry.player = {
             .pipe(new Speaker);
     }
 };
+object_registry.database = DB;
 
-function dispatchMethod(msg) {
-    d("dispatching",msg);
+function dispatchMethod(msg,win) {
+    //d("dispatching",msg);
     var target = object_registry[msg.target];
     var method = target[msg.method];
+    if(!msg.arguments) {
+        msg.arguments = [];
+    }
+    msg.arguments.push(function(err,retval){
+        //console.log("callback called");
+        if(win) win.remote({
+            type:'callback',
+            method:msg.method,
+            target:msg.target,
+            callbackid:msg.id,
+            value:retval,
+            error:err
+        });
+
+    });
     method.apply(target,msg.arguments);
 }
 
 
-function q_map(array,fun) {
-    return Q.allSettled(array.map(fun));
-}
-function q_seq_map(array,fun) {
-    var funcs = array.map(function(item) {
-        return function() {
-            return fun(item);
-        }
-    });
-    return funcs.reduce(Q.when, Q(null));
-}
-
-var window = null;
-function startMP3Scan(win) {
-    window = win;
-    var start_path = "/Users/josh/Music/iTunes/iTunes Media/Music";
-    //var start_path = "/Volumes/PieHole/Mp3Archive/iTunes/Yes";
-    console.log("scanning from ", start_path);
-
-    walker.filter(start_path, function (file) {
-        //skip anything in the itunes LP directories
-        if (file.indexOf('.itlp') >= 0) return false;
-        //only match mp3s
-        if (file.indexOf('.mp3') >= 0) return true;
-    }).then(function (files) {
-        console.log("mp3 files to process = ", files.length);
-        //generate promises
-        //return q_map(files,qParseMP3);
-        return q_seq_map(files, qParseMP3);
-    }).then(function () {
-        console.log("all done! database length =", songs.length);
-    });
-
-    function qParseMP3(file) {
-        return Q.Promise(function (resolve, reject, notify) {
-            console.log("starting");
-            mm(fs.createReadStream(file), { duration: true}, function (err, metadata) {
-                console.log(err);
-                if (err) return reject(err);
-                addMP3ToDatabase(file,metadata);
-                console.log(metadata);
-                resolve();
-            });
-            /*
-            id3({file: file, type: id3.OPEN_LOCAL}, function (err, tags) {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                addMP3ToDatabase(file, tags);
-                //console.log("ending");
-                resolve();
-            });*/
-        });
-    }
-
-    var songs = [];
-
-    function generateUID() {
-        return "id_"+Math.floor(Math.random()*1000*1000*1000);
-    }
-
-    function addMP3ToDatabase(file, info) {
-        /*
-        if (tags.title) tags.title = tags.title.replace(/\0/g, '');
-        if (tags.artist) tags.artist = tags.artist.replace(/\0/g, '');
-        if (tags.album) tags.album = tags.album.replace(/\0/g, '');
-        */
-        info.file = file;
-        info.uid = generateUID();
-        songs.push(info);
-        if(win) win.remote({
-            type:'song-added',
-            song: info
-        });
-    }
-
-}
-
-
-//startMP3Scan(null);
+//DB.startMP3Scan(null);
 startApp();
-/*
-dispatchMethod({
-    target:"player",
-    method:'play',
-    arguments:["foo"]
-});
-*/
