@@ -2,6 +2,17 @@ var React = require('react');
 var CustomList = require('./CustomList.jsx');
 var moment = require('moment');
 
+function d() {
+    var args = Array.prototype.splice.call(arguments,0);
+    args.forEach(function(arg) {
+        dprint.apply(null, [arg]);
+    });
+}
+
+function dprint(obj) {
+    console.log(JSON.stringify(obj,null,'  '));
+}
+
 var SongDatabase = {
     songs:[],
     artists_map:{"All":"All"},
@@ -29,7 +40,6 @@ var SongDatabase = {
         var self = this;
         if(this.isThrust()) {
             THRUST.remote.listen(function (msg) {
-                //console.log("got message of type" + JSON.stringify(msg.type,null,'  '));
                 if(msg.type == 'callback') {
                     if(self.thrust_cbs[msg.callbackid]) {
                         self.thrust_cbs[msg.callbackid](msg.value);
@@ -41,12 +51,10 @@ var SongDatabase = {
                     self.notify('database-loaded');
                     return;
                 }
-                if(msg.type == "player-status") {
-                    self.setStatus(msg.status);
+                if(msg.type == 'status-update') {
+                    self.setStatusFromNotification(msg);
                     return;
                 }
-                if (msg.type !== 'song-added') return;
-                self.addSong(msg.song);
             });
             THRUST.remote.send({type:'running'});
         } else {
@@ -62,64 +70,104 @@ var SongDatabase = {
     isThrust: function() {
         return (typeof THRUST !== 'undefined');
     },
-    addSong: function(song) {
-        this.songs.push(song);
-        if(!this.artists_map[song.artist]) {
-            this.artists_map[song.artist] = song.artist;
-            this.artists_list.push(song.artist);
+
+    sendThrustCallbackRequest: function(target, method, args, cb, fallback) {
+        //console.log("calling " + target + "." + method);
+        if(this.isThrust()) {
+            var id = 'id_' + Math.random();
+            this.thrust_cbs[id] = cb;
+            THRUST.remote.send({
+                id: id,
+                type: 'method',
+                target: target,
+                method: method,
+                arguments: args
+            });
+        } else {
+            cb(fallback)
         }
-        this.notify();
     },
 
     getArtists: function(cb) {
-        if(this.isThrust()) {
-            var id = 'id_'+Math.random();
-            this.thrust_cbs[id] = cb;
-            THRUST.remote.send({
-                id:id,
-                type:'method',
-                target:'database',
-                method:'getArtists'
-            });
-        }
-        return [];
+        this.sendThrustCallbackRequest('database','getArtists',[],cb,[]);
     },
-    getSongs: function() {
-        console.log("get songs called");
-        return this.songs;
+    getSongsForArtist: function(artist, cb) {
+        this.sendThrustCallbackRequest('database','getSongsForArtist',[artist],cb, []);
     },
-    getSelected: function() {
-        return this.selected;
-    },
-    setSelected: function(song) {
-        this.selected = song;
-        this.notify();
-    },
+
     playing: false,
-    playSong: function(song) {
-        if(this.isThrust()) {
-            THRUST.remote.send({
-                type:'method',
-                target:'player',
-                method:'play',
-                arguments:[song]
-            });
-        };
-        this.playing = true;
-        this.notify();
+    currentPlayset: [],
+    currentSong:null,
+    setCurrentPlayset: function(songs) {
+        this.currentPlayset = songs;
+    },
+    setCurrentSong: function(song) {
+        this.currentSong = song;
+    },
+    getCurrentSong: function() {
+        return this.currentSong;
+    },
+    getCurrentSongIndex: function() {
+        var cs = this.getCurrentSong();
+        var n = -1;
+        this.currentPlayset.forEach(function(item,i) {
+            if(item._id == cs._id) {
+                n = i;
+            }
+        });
+        return n;
+    },
+
+    getSongAtIndex: function(n) {
+        return this.currentPlayset[n];
+    },
+    playPreviousSong: function() {
+        var n = this.getCurrentSongIndex();
+        if(!n || n <= 0) {
+            n = 0;
+        } else {
+            n--;
+        }
+        var ncs = this.getSongAtIndex(n);
+        this.setCurrentSong(ncs);
+        var self = this;
+        this.sendThrustCallbackRequest('player','stop',[],function() {
+            self.sendThrustCallbackRequest('player','play', [ncs],function() {
+                //console.log("now the new song is really playing");
+            },null);
+        },null);
+    },
+    playNextSong: function() {
+        var n = this.getCurrentSongIndex();
+        if(!n || n <= 0) {
+            n = 0;
+        } else {
+            n++;
+        }
+        var ncs = this.getSongAtIndex(n);
+        this.setCurrentSong(ncs);
+        var self = this;
+        this.sendThrustCallbackRequest('player','stop',[],function() {
+            console.log("now the song is really stopped");
+            self.sendThrustCallbackRequest('player','play', [ncs],function() {
+                console.log("now the song is really playing");
+            },null);
+        },null);
+    },
+    togglePlaySong: function() {
+        var self = this;
+        if(this.isPlaying()) {
+            this.sendThrustCallbackRequest('player','stop',[],function() {
+                console.log("now the song is really paused");
+            },null);
+        } else {
+            this.sendThrustCallbackRequest('player','play', [this.getCurrentSong()],function() {
+                console.log("now the song is really playing");
+            },null);
+        }
     },
     isPlaying: function() {
         return this.playing;
-    },
-    pauseSongIfPlaying: function() {
-        this.playing = false;
-        this.notify();
-    },
-    startNextTrack: function() {
-
-    },
-    startPrevTrack: function() {
-
     },
     setVolume: function(vol) {
         this.volume = vol;
@@ -127,42 +175,16 @@ var SongDatabase = {
     getVolume: function() {
         return this.volume;
     },
-
-    status: null,
-    setStatus: function(status) {
-        console.log("new status = " + JSON.stringify(status,null,'  '));
-        this.status = status;
-        this.notify();
-    },
-    getStatus: function() {
-        return this.status;
-    },
-    navNextSong: function(song) {
-        var n = this.songs.indexOf(song);
-        n++;
-        var song = this.songs[n];
-        this.selected = song;
-        this.notify();
-    },
-    selectedArtist: null,
-    setSelectedArtist: function(artist) {
-        this.selectedArtist = artist;
-        this.notify();
-    },
-    getSongsForArtist: function(artist, cb) {
-        if(this.isThrust()) {
-            var id = 'id_'+Math.random();
-            this.thrust_cbs[id] = cb;
-            THRUST.remote.send({
-                id:id,
-                type:'method',
-                target:'database',
-                method:'getSongsForArtist',
-                arguments:[artist]
-            });
+    setStatusFromNotification: function(msg) {
+        d("status changed to ",msg);
+        this.playing = msg.playing;
+        if(msg.song) {
+            this.currentSong = msg.song;
         }
-        return [];
+        this.notify('status-update');
     }
+
+
 };
 
 SongDatabase.init();
@@ -171,29 +193,11 @@ var SongTableRow = React.createClass({
     clicked: function(e) {
         e.preventDefault();
         this.props.setSelected(this.props.index);
-        //SongDatabase.setSelected(this.props.song);
         this.refs.row.getDOMNode().focus();
+        SongDatabase.setCurrentSong(this.props.song);
     },
     doubleClicked: function(e) {
         e.preventDefault();
-        SongDatabase.playSong(this.props.song);
-    },
-    keypress: function(e) {
-        //console.log("key pressed",e.key);
-        //e.preventDefault();
-        //e.stopPropagation();
-    },
-    keydown: function(e) {
-        //console.log("keydown",e.key);
-        if(e.key == 'ArrowDown') {
-            //console.log('st = ',this.refs.row.getDOMNode().scrollTop);
-            //console.log('off = ',this.refs.row.getDOMNode().offsetTop);
-            //this.props.setSelected(this.props.index+1);
-            //e.preventDefault();
-            //SongDatabase.navNextSong(this.props.song);
-            //return;
-        }
-
     },
     render: function() {
         var song = this.props.song;
@@ -207,8 +211,6 @@ var SongTableRow = React.createClass({
                    className={cn}
                    onClick={this.clicked}
                    onDoubleClick={this.doubleClicked}
-                   onKeyPress={this.keypress}
-                   onKeyDown={this.keydown}
             >
             <td>{song.title}</td>
             <td>{dur.minutes()}:{dur.seconds()}</td>
@@ -259,19 +261,7 @@ var ScrollTable = React.createClass({
         var child = this.refs['child'+n];
         var dom = React.findDOMNode(child);
         dom.focus();
-        /*
-         //var node = this.refs.body.getDOMNode();
-         //var h = this.refs.body.getDOMNode().offsetHeight;
-        var off = dom.offsetTop;
-        if(dom.offsetTop < node.scrollTop) {
-            node.scrollTop = dom.offsetTop;
-            console.log('moving up to ', node.scrollTop);
-        }
-        if(dom.offsetTop+dom.offsetHeight > h+node.scrollTop) {
-            node.scrollTop = (dom.offsetTop+dom.offsetHeight)-h;
-            console.log('moving down to ', node.scrollTop);
-        }
-        */
+        SongDatabase.setCurrentPlayset(this.props.items);
     },
     render: function() {
         var self = this;
@@ -323,20 +313,22 @@ var MusicDisplay = React.createClass({
         return {
             title:'---',
             artist:'---',
-            album:'---'
+            album:'---',
+            playing: false
         }
     },
     componentDidMount: function() {
         var self = this;
-        SongDatabase.onChange('player',function() {
-            var status = SongDatabase.getStatus();
-            if(status) {
-                self.setState({
-                    title: status.song.title,
-                    artist: status.song.artist[0],
-                    album: status.song.album
-                })
-            }
+        SongDatabase.onChange('status-update',function() {
+            var playing = SongDatabase.isPlaying();
+            var song = SongDatabase.getCurrentSong();
+            d("current song ",song,"playing",playing);
+            self.setState({
+                title: song.title,
+                artist: song.artist,
+                album: song.album,
+                playing: playing
+            });
         })
     },
     render: function() {
@@ -344,6 +336,7 @@ var MusicDisplay = React.createClass({
             <span className="grow" id="display-song">{this.state.title}</span>
             <span id="display-artist">{this.state.artist} - {this.state.album}</span>
             <progress min="0" max="100" value="20"/>
+            <span id='playing-state'>{this.state.playing?"playing":"still"}</span>
             </div>)
     }
 });
@@ -375,13 +368,21 @@ var MainView = React.createClass({
                 })
             });
         });
+        SongDatabase.onChange('status-update',function() {
+            var playing = SongDatabase.isPlaying();
+            self.setState({
+                playing: playing
+            });
+        })
+    },
+    prevPressed: function() {
+        SongDatabase.playPreviousSong();
+    },
+    nextPressed: function() {
+        SongDatabase.playNextSong();
     },
     playPressed: function() {
-        if(SongDatabase.isPlaying()) {
-            SongDatabase.pauseSongIfPlaying();
-        } else {
-            SongDatabase.playSong(SongDatabase.getSelected());
-        }
+        SongDatabase.togglePlaySong();
     },
     selectArtist: function(artist) {
         var self = this;
@@ -391,7 +392,7 @@ var MainView = React.createClass({
             })
         });
     },
-   render: function() {
+    render: function() {
        var playButtonClass = "fa no-bg";
        if(SongDatabase.isPlaying()) {
            playButtonClass += " fa-pause";
@@ -401,9 +402,9 @@ var MainView = React.createClass({
         return (<div className="vbox fill">
             <header id="main-header">
                 <div className="group">
-                    <button className="fa fa-backward no-bg" id="backward-button"></button>
-                    <button className={playButtonClass} id="play-button" onClick={this.playPressed}></button>
-                    <button className="fa fa-forward no-bg" id="forward-button"></button>
+                    <button onClick={this.prevPressed} className="fa fa-backward no-bg" id="backward-button"></button>
+                    <button onClick={this.playPressed} className={playButtonClass}      id="play-button"></button>
+                    <button onClick={this.nextPressed} className="fa fa-forward no-bg"  id="forward-button"></button>
                 </div>
                 <div className="group">
                     <label className="fa fa-volume-down"></label>

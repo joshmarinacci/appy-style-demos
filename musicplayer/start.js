@@ -27,6 +27,7 @@ var fs = require('fs');
 var lame = require('lame');
 var Speaker = require('speaker');
 var DB = require('./songdatabase');
+var util = require('util');
 
 function d() {
     var args = Array.prototype.splice.call(arguments,0);
@@ -36,16 +37,18 @@ function d() {
 }
 
 function dprint(obj) {
-    console.log(JSON.stringify(obj,null,'  '));
+    console.log(util.inspect(obj));
 }
 
+
+var window = null;
 function startApp() {
     require('node-thrust')(function (err, api) {
         var url = 'file://' + __dirname + '/ui.html';
         console.log("opening", url);
         var win = api.window({root_url: url});
+        window = win;
         win.show();
-        console.log(api);
         win.on('closed', function () {
             console.log("the window was closed");
             api.exit();
@@ -61,39 +64,59 @@ function startApp() {
         });
     });
 }
+function sendNotification(msg) {
+    if(window) window.remote(msg);
+}
 
 var object_registry = {};
 object_registry.player = {
-    play: function(song) {
-        console.log("playing the song",song);
-        if(this.stream) {
-            this.stream.end();
+    play: function(song,cb) {
+        if(song == null) {
+            throw new Error("invalid song. null");
         }
-        this.stream = fs.createReadStream(song.file)
+        this.speaker = new Speaker();
+        fs.createReadStream(song.file)
             .pipe(new lame.Decoder)
-            .on('format', function(){
-                if(window) window.remote({
-                    type:'player-status',
-                    source:'player',
-                    status: {
-                        playing:true,
-                        song: song
-                    }
+            .on('format', function() {
+                if(cb) cb();
+                sendNotification({
+                    type:'status-update',
+                    playing:true,
+                    song: song
                 });
             })
-            .pipe(new Speaker);
+            .pipe(this.speaker);
+    },
+    stop: function(cb) {
+        if(this.speaker) {
+            this.speaker.on('flush',function() {
+                console.log("flush called");
+            });
+            this.speaker.on('close',function() {
+                console.log("close called");
+                cb();
+                sendNotification({
+                    type:'status-update',
+                    playing:false
+                });
+            });
+            this.speaker.end();
+        }
     }
 };
 object_registry.database = DB;
 
 function dispatchMethod(msg,win) {
-    //d("dispatching",msg);
+    //d("dispatching",msg.target+"."+msg.method);
     var target = object_registry[msg.target];
     var method = target[msg.method];
+    if(!method) {
+        throw new Error("no such method " + msg.method);
+    }
     if(!msg.arguments) {
         msg.arguments = [];
     }
-    msg.arguments.push(function(err,retval){
+    var cb = function(err,retval){
         //console.log("callback called");
         if(win) win.remote({
             type:'callback',
@@ -103,8 +126,8 @@ function dispatchMethod(msg,win) {
             value:retval,
             error:err
         });
-
-    });
+    };
+    msg.arguments.push(cb);
     method.apply(target,msg.arguments);
 }
 
