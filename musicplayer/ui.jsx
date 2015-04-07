@@ -97,18 +97,25 @@ var SongDatabase = {
 
     playing: false,
     currentPlayset: [],
-    currentSong:null,
+    playingSong:null,
+    selectedSong: null,
     setCurrentPlayset: function(songs) {
         this.currentPlayset = songs;
     },
-    setCurrentSong: function(song) {
-        this.currentSong = song;
+    setSelectedSong: function(song) {
+        this.selectedSong = song;
     },
-    getCurrentSong: function() {
-        return this.currentSong;
+    setPlayingSong: function(song) {
+        this.playingSong = song;
     },
-    getCurrentSongIndex: function() {
-        var cs = this.getCurrentSong();
+    getPlayingSong: function() {
+        if(this.playingSong == null) {
+            return this.selectedSong;
+        }
+        return this.playingSong;
+    },
+    getPlayingSongIndex: function() {
+        var cs = this.getPlayingSong();
         var n = -1;
         this.currentPlayset.forEach(function(item,i) {
             if(item._id == cs._id) {
@@ -122,14 +129,14 @@ var SongDatabase = {
         return this.currentPlayset[n];
     },
     playPreviousSong: function() {
-        var n = this.getCurrentSongIndex();
+        var n = this.getPlayingSongIndex();
         if(!n || n <= 0) {
             n = 0;
         } else {
             n--;
         }
         var ncs = this.getSongAtIndex(n);
-        this.setCurrentSong(ncs);
+        this.setPlayingSong(ncs);
         var self = this;
         this.sendThrustCallbackRequest('player','stop',[],function() {
             self.sendThrustCallbackRequest('player','play', [ncs],function() {
@@ -138,14 +145,14 @@ var SongDatabase = {
         },null);
     },
     playNextSong: function() {
-        var n = this.getCurrentSongIndex();
+        var n = this.getPlayingSongIndex();
         if(!n || n <= 0) {
             n = 0;
         } else {
             n++;
         }
         var ncs = this.getSongAtIndex(n);
-        this.setCurrentSong(ncs);
+        this.setPlayingSong(ncs);
         var self = this;
         this.sendThrustCallbackRequest('player','stop',[],function() {
             console.log("now the song is really stopped");
@@ -154,6 +161,21 @@ var SongDatabase = {
             },null);
         },null);
     },
+    playSong: function(song) {
+        var self = this;
+        this.setPlayingSong(song);
+        if(this.isPlaying()) {
+            self.sendThrustCallbackRequest('player','stop',[],function() {
+                self.sendThrustCallbackRequest('player','play', [self.getPlayingSong()],function() {
+                    console.log("now the song is really playing");
+                },null);
+            },null);
+        } else {
+            self.sendThrustCallbackRequest('player','play', [self.getPlayingSong()],function() {
+                console.log("now the song is really playing");
+            },null);
+        }
+    },
     togglePlaySong: function() {
         var self = this;
         if(this.isPlaying()) {
@@ -161,7 +183,7 @@ var SongDatabase = {
                 console.log("now the song is really paused");
             },null);
         } else {
-            this.sendThrustCallbackRequest('player','play', [this.getCurrentSong()],function() {
+            this.sendThrustCallbackRequest('player','play', [this.getPlayingSong()],function() {
                 console.log("now the song is really playing");
             },null);
         }
@@ -179,7 +201,7 @@ var SongDatabase = {
         d("status changed to ",msg);
         this.playing = msg.playing;
         if(msg.song) {
-            this.currentSong = msg.song;
+            this.playingSong = msg.song;
         }
         this.notify('status-update');
     }
@@ -194,10 +216,11 @@ var SongTableRow = React.createClass({
         e.preventDefault();
         this.props.setSelected(this.props.index);
         this.refs.row.getDOMNode().focus();
-        SongDatabase.setCurrentSong(this.props.song);
+        SongDatabase.setSelectedSong(this.props.song);
     },
     doubleClicked: function(e) {
         e.preventDefault();
+        SongDatabase.playSong(this.props.song);
     },
     render: function() {
         var song = this.props.song;
@@ -321,7 +344,7 @@ var MusicDisplay = React.createClass({
         var self = this;
         SongDatabase.onChange('status-update',function() {
             var playing = SongDatabase.isPlaying();
-            var song = SongDatabase.getCurrentSong();
+            var song = SongDatabase.getPlayingSong();
             d("current song ",song,"playing",playing);
             self.setState({
                 title: song.title,
