@@ -235,6 +235,7 @@ var SongTableRow = React.createClass({
                    onClick={this.clicked}
                    onDoubleClick={this.doubleClicked}
             >
+            <td>{song.track.no}</td>
             <td>{song.title}</td>
             <td>{dur.minutes()}:{dur.seconds()}</td>
             <td>{song.artist}</td>
@@ -302,6 +303,7 @@ var ScrollTable = React.createClass({
             <div id="wrapper">
                 <table tabIndex="0">
                     <thead>
+                    <th>Track #</th>
                     <th>Name</th>
                     <th>Time</th>
                     <th>Artist</th>
