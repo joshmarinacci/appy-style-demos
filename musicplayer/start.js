@@ -46,12 +46,13 @@ function startApp() {
     require('node-thrust')(function (err, api) {
         var url = 'file://' + __dirname + '/ui.html';
         console.log("opening", url);
-        var win = api.window({root_url: url});
+        var win = api.window({root_url: url, size: {width: 1100, height: 700}, title:'Foo Tunes'});
         window = win;
         win.show();
+        win.focus();
         win.on('closed', function () {
             console.log("the window was closed");
-            api.exit();
+            process.exit();
         });
         win.on('remote', function (msg) {
             //d("got the message", msg);
