@@ -289,6 +289,15 @@ var sources = [
     { type: 'source', title:'10 Most Played', icon:'fa fa-gears fa-fw'},
 ];
 
+
+var SongCellCustomizer = function(song, columnName) {
+    if(columnName == 'duration') {
+        var dur = moment.duration(song.duration,'seconds');
+        return <td>{dur.minutes()}:{dur.seconds()}</td>
+    }
+    return <td>{song[columnName]}</td>;
+};
+
 var MainView = React.createClass({
     getInitialState: function() {
         return {
@@ -330,8 +339,16 @@ var MainView = React.createClass({
             })
         });
     },
+    selectSong: function(song) {
+        SongDatabase.setSelectedSong(song);
+        SongDatabase.setCurrentPlayset(this.state.songs);
+    },
+    doubleClickedSong: function(song) {
+        SongDatabase.playSong(song);
+    },
     render: function() {
-       var playButtonClass = "fa no-bg";
+        var columns = ["title","artist","album",'genre','duration'];
+        var playButtonClass = "fa no-bg";
        if(SongDatabase.isPlaying()) {
            playButtonClass += " fa-pause";
        } else {
@@ -365,7 +382,13 @@ var MainView = React.createClass({
                     <CustomList items={this.state.artists} onSelect={this.selectArtist}/>
                 </ResizableColumn>
                 <div className='vbox grow'>
-                    <ScrollingTable items={this.state.songs}/>
+                    <ScrollingTable
+                        items={this.state.songs}
+                        columns={columns}
+                        onSelectRow={this.selectSong}
+                        doubleClicked={this.doubleClickedSong}
+                        cellCustomizer={SongCellCustomizer}
+                        />
                 </div>
             </div>
             <footer id="main-footer">

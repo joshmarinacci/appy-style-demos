@@ -1,15 +1,16 @@
 var React = require('react');
-var moment = require('moment');
 var SongTableRow = React.createClass({
     clicked: function(e) {
         e.preventDefault();
         this.props.setSelected(this.props.index);
         this.refs.row.getDOMNode().focus();
-        SongDatabase.setSelectedSong(this.props.song);
     },
     doubleClicked: function(e) {
         e.preventDefault();
-        SongDatabase.playSong(this.props.song);
+        this.props.doubleClicked(this.props.song);
+    },
+    cellCustomizer: function(row, col) {
+        return <td>{row[col]}</td>
     },
     render: function() {
         var song = this.props.song;
@@ -19,18 +20,26 @@ var SongTableRow = React.createClass({
             cn = "selected";
         }
         var self = this;
+        var cust = this.cellCustomizer;
+        if(this.props.cellCustomizer) {
+            cust = this.props.cellCustomizer;
+        }
         var cols = this.props.columnNames.map(function(col){
             var w = self.props.columnWidths[col];
-            return <td key={col} style={{ minWidth:w, maxWidth:w}}>{song[col]}</td>
+            var cell = cust(song,col);
+            return React.cloneElement(cell,{
+                key:col,
+                style: {
+                    minWidth:w,
+                    maxWidth:w
+                }
+            });
         });
-        var dur = moment.duration(song.duration,'seconds');
         return <tr ref='row' tabIndex="1"
                    className={cn}
                    onClick={this.clicked}
                    onDoubleClick={this.doubleClicked}
-            >{cols}
-            <td>{dur.minutes()}:{dur.seconds()}</td>
-        </tr>;
+            >{cols}</tr>;
     }
 });
 
@@ -90,14 +99,7 @@ var ScrollTable = React.createClass({
     getInitialState: function() {
         return {
             selectedIndex:0,
-            columnNames: ["title","duration","artist","album","genre"],
-            columnWidths:{
-                "title":200,
-                "duration":200,
-                "artist":200,
-                "album":200,
-                "genre":200
-            }
+            columnWidths:{}
         }
     },
     keypress: function(e) {
@@ -134,18 +136,29 @@ var ScrollTable = React.createClass({
         var child = this.refs['child'+n];
         var dom = React.findDOMNode(child);
         dom.focus();
-        SongDatabase.setCurrentPlayset(this.props.items);
+        this.props.onSelectRow(child.props.song);
     },
     columnResized: function(col,width) {
         this.state.columnWidths[col] = width;
         this.setState({
             columnWidths:this.state.columnWidths
         })
-
+    },
+    componentWillReceiveProps: function(newProps) {
+        if(newProps.columns) {
+            var widths = {};
+            newProps.columns.forEach(function(col) {
+                widths[col] = 200;
+            });
+            this.setState({
+                columnWidths:widths
+            });
+        }
     },
     render: function() {
         var self = this;
-        var headers = this.state.columnNames.map(function(col) {
+
+        var headers = this.props.columns.map(function(col) {
             return <ColumnHeader
                 key={col} name={col}
                 onResize={self.columnResized}
@@ -160,8 +173,10 @@ var ScrollTable = React.createClass({
                 index={i}
                 selectedIndex={self.state.selectedIndex}
                 setSelected={self.setSelected}
-                columnNames={self.state.columnNames}
+                columnNames={self.props.columns}
                 columnWidths={self.state.columnWidths}
+                doubleClicked={self.props.doubleClicked}
+                cellCustomizer={self.props.cellCustomizer}
                 />;
         });
         return (
