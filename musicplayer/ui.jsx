@@ -1,5 +1,6 @@
 var React = require('react');
 var CustomList = require('./CustomList.jsx');
+var ScrollingTable = require('./ScrollingTable.jsx');
 var ResizableColumn = require('./ResizableColumn.jsx');
 var moment = require('moment');
 
@@ -13,6 +14,35 @@ function d() {
 function dprint(obj) {
     console.log(JSON.stringify(obj,null,'  '));
 }
+
+var dummy_data = {
+    artists:["foo","bar","baz"],
+    songs: {
+        "foo":[
+            {
+                title:"rock in",
+                artist:"foo",
+                album:"foozer",
+                genre:"foorock",
+                duration:238
+            },
+            {
+                title:"rock out",
+                artist:"foo",
+                album:"foozer",
+                genre:"foorock",
+                duration:338
+            },
+            {
+                title:"rock on",
+                artist:"foo",
+                album:"foozer",
+                genre:"foorock",
+                duration:438
+            }
+        ]
+    }
+};
 
 var SongDatabase = {
     songs:[],
@@ -59,13 +89,9 @@ var SongDatabase = {
             });
             THRUST.remote.send({type:'running'});
         } else {
-            var artists = ["foo","bar","baz"];
-            var self = this;
-            artists.forEach(function(artist) {
-                for (var i = 0; i < 12; i++) {
-                    self.addSong({title: i+' foo bar baz mister foo bar baz and stuff', artist: artist, album: 'baz'});
-                }
-            });
+            setTimeout(function(){
+                self.notify("database-loaded");
+            },1000);
         }
     },
     isThrust: function() {
@@ -90,10 +116,10 @@ var SongDatabase = {
     },
 
     getArtists: function(cb) {
-        this.sendThrustCallbackRequest('database','getArtists',[],cb,[]);
+        this.sendThrustCallbackRequest('database','getArtists',[],cb,dummy_data.artists);
     },
     getSongsForArtist: function(artist, cb) {
-        this.sendThrustCallbackRequest('database','getSongsForArtist',[artist],cb, []);
+        this.sendThrustCallbackRequest('database','getSongsForArtist',[artist],cb, dummy_data.songs.foo);
     },
 
     playing: false,
@@ -212,118 +238,6 @@ var SongDatabase = {
 
 SongDatabase.init();
 
-var SongTableRow = React.createClass({
-    clicked: function(e) {
-        e.preventDefault();
-        this.props.setSelected(this.props.index);
-        this.refs.row.getDOMNode().focus();
-        SongDatabase.setSelectedSong(this.props.song);
-    },
-    doubleClicked: function(e) {
-        e.preventDefault();
-        SongDatabase.playSong(this.props.song);
-    },
-    render: function() {
-        var song = this.props.song;
-        var selected = this.props.index == this.props.selectedIndex;
-        var cn = "";
-        if(selected) {
-            cn = "selected";
-        }
-        var dur = moment.duration(song.duration,'seconds');
-        return <tr ref='row' tabIndex="1"
-                   className={cn}
-                   onClick={this.clicked}
-                   onDoubleClick={this.doubleClicked}
-            >
-            <td>{song.title}</td>
-            <td>{dur.minutes()}:{dur.seconds()}</td>
-            <td>{song.artist}</td>
-            <td>{song.album}</td>
-            <td>{song.genre}</td>
-        </tr>;
-    }
-});
-
-var ScrollTable = React.createClass({
-    getInitialState: function() {
-        return {
-            selectedIndex:0
-        }
-    },
-    keypress: function(e) {
-        console.log("got a key event");
-    },
-    keydown: function(e) {
-        console.log('table got key down',e.key);
-        if(e.key == 'ArrowDown') {
-            this.setSelected(this.state.selectedIndex+1);
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-        }
-        if(e.key == 'ArrowUp') {
-            this.setSelected(this.state.selectedIndex-1);
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-        }
-        if(e.key == 'Enter') {
-            console.log("playing the current song");
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-        }
-    },
-    setSelected: function(n) {
-        if(n < 0) n = 0;
-        if(n >= this.props.items.length) n = this.props.items.length-1;
-        this.setState({
-            selectedIndex:n
-        });
-
-        var child = this.refs['child'+n];
-        var dom = React.findDOMNode(child);
-        dom.focus();
-        SongDatabase.setCurrentPlayset(this.props.items);
-    },
-    render: function() {
-        var self = this;
-        var rows = this.props.items.map(function(item,i) {
-            return <SongTableRow
-                    song={item}
-                    key={i}
-                    ref={"child"+i}
-                    index={i}
-                    selectedIndex={self.state.selectedIndex}
-                    setSelected={self.setSelected}
-                />;
-        });
-        return (
-            <div id="wrapper">
-                <table tabIndex="0">
-                    <thead>
-                    <th>Name</th>
-                    <th>Time</th>
-                    <th>Artist</th>
-                    <th>Album</th>
-                    <th>Genre</th>
-                    </thead>
-                </table>
-                <div id="body" ref='body'>
-                    <table
-                        ref="tbody"
-                        onKeyPress={this.keypress}
-                        onKeyDown={this.keydown}
-                        >
-                        <tbody>
-                        {rows}
-                        </tbody>
-                    </table>
-                </div>
-            </div>)
-    }
-});
 
 var SourcesCustomizer = function(item) {
     if(item.type == 'header') {
@@ -451,7 +365,7 @@ var MainView = React.createClass({
                     <CustomList items={this.state.artists} onSelect={this.selectArtist}/>
                 </ResizableColumn>
                 <div className='vbox grow'>
-                    <ScrollTable items={this.state.songs}/>
+                    <ScrollingTable items={this.state.songs}/>
                 </div>
             </div>
             <footer id="main-footer">

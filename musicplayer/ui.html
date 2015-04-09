@@ -71,12 +71,10 @@
             overflow-x: hidden;
             overflow-y: scroll;
         }
-        th, td {
-            min-width: 200px;
+        table th, table td {
+            min-width: 100px;
             overflow: hidden;
             padding: 1em;
-            width: 200px;
-            max-width: 200px;
             white-space: nowrap;
             text-overflow: ellipsis;
         }
@@ -101,7 +99,15 @@
             border-right-style: solid;
         }
 
-
+        .drag-handle {
+            cursor:col-resize;
+            position: absolute;
+            top:0;
+            right:0;
+            bottom:0;
+            border: 0px solid blue;
+            width: 8px;
+        }
     </style>
 </head>
 <body>

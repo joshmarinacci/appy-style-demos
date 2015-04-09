@@ -38,10 +38,10 @@ var ResizableColumn = React.createClass({
     },
     render: function() {
         var style = {
-            'min-width':this.state.divWidth+'px',
-            'border-right-width':'1px',
-            'border-right-style':'solid',
-            'cursor':'col-resize'
+            minWidth:this.state.divWidth+'px',
+            borderRightWidth:'1px',
+            borderRightStyle:'solid',
+            cursor:'col-resize'
         };
         return (<div ref='pane'
                 onMouseDown={this.columnMouseDown}
