@@ -1,5 +1,5 @@
 var React = require('react');
-var SongTableRow = React.createClass({
+var TableRow = React.createClass({
     clicked: function(e) {
         e.preventDefault();
         this.props.setSelected(this.props.index);
@@ -7,13 +7,13 @@ var SongTableRow = React.createClass({
     },
     doubleClicked: function(e) {
         e.preventDefault();
-        this.props.doubleClicked(this.props.song);
+        this.props.doubleClicked(this.props.item);
     },
     cellCustomizer: function(row, col) {
         return <td>{row[col]}</td>
     },
     render: function() {
-        var song = this.props.song;
+        var item = this.props.item;
         var selected = this.props.index == this.props.selectedIndex;
         var cn = "";
         if(selected) {
@@ -26,7 +26,7 @@ var SongTableRow = React.createClass({
         }
         var cols = this.props.columnNames.map(function(col){
             var w = self.props.columnWidths[col];
-            var cell = cust(song,col);
+            var cell = cust(item,col);
             return React.cloneElement(cell,{
                 key:col,
                 style: {
@@ -120,7 +120,6 @@ var ScrollTable = React.createClass({
             return;
         }
         if(e.key == 'Enter') {
-            console.log("playing the current song");
             e.stopPropagation();
             e.preventDefault();
             return;
@@ -136,7 +135,7 @@ var ScrollTable = React.createClass({
         var child = this.refs['child'+n];
         var dom = React.findDOMNode(child);
         dom.focus();
-        this.props.onSelectRow(child.props.song);
+        this.props.onSelectRow(child.props.item);
     },
     columnResized: function(col,width) {
         this.state.columnWidths[col] = width;
@@ -166,8 +165,8 @@ var ScrollTable = React.createClass({
                 />
         });
         var rows = this.props.items.map(function(item,i) {
-            return <SongTableRow
-                song={item}
+            return <TableRow
+                item={item}
                 key={i}
                 ref={"child"+i}
                 index={i}
