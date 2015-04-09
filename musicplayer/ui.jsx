@@ -1,5 +1,6 @@
 var React = require('react');
 var CustomList = require('./CustomList.jsx');
+var ResizableColumn = require('./ResizableColumn.jsx');
 var moment = require('moment');
 
 function d() {
@@ -443,14 +444,14 @@ var MainView = React.createClass({
                 <input type="search" placeholder="albums, artists, songs" id="search-box"/>
             </header>
             <div className="hbox grow">
-                <div className="vbox" id="sources-pane">
+                <ResizableColumn className="vbox" id="sources-pane">
                     <header>Sources</header>
                     <CustomList items={sources} customizer={SourcesCustomizer}/>
-                </div>
-                <div className="vbox scroll" id="artists-pane">
+                </ResizableColumn>
+                <ResizableColumn className="vbox scroll" id="artists-pane">
                     <header>Artists</header>
                     <CustomList items={this.state.artists} onSelect={this.selectArtist}/>
-                </div>
+                </ResizableColumn>
                 <div className='vbox grow'>
                     <ScrollTable items={this.state.songs}/>
                 </div>
