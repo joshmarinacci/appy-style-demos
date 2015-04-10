@@ -291,6 +291,19 @@ var sources = [
 
 
 var SongCellCustomizer = function(song, columnName) {
+    if(columnName == '#') {
+        var n = ' ';
+        if(song.track && song.track.no) {
+            n = song.track.no;
+        }
+        return <td>{n}</td>
+    }
+    if(columnName == 'play') {
+        if(SongDatabase.isPlaying() && SongDatabase.getPlayingSong()._id == song._id) {
+            return <td><i className="fa fa-volume-up"></i></td>
+        }
+        return <td>&nbsp;</td>
+    }
     if(columnName == 'duration') {
         var dur = moment.duration(song.duration,'seconds');
         return <td>{dur.minutes()}:{dur.seconds()}</td>
@@ -347,7 +360,7 @@ var MainView = React.createClass({
         SongDatabase.playSong(song);
     },
     render: function() {
-        var columns = ["title","artist","album",'genre','duration'];
+        var columns = ["play","#","title",'duration',"album","artist",'genre'];
         var playButtonClass = "fa no-bg";
        if(SongDatabase.isPlaying()) {
            playButtonClass += " fa-pause";

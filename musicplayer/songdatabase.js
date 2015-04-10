@@ -67,7 +67,7 @@ exports.getArtists = function(cb) {
 }
 
 exports.getSongsForArtist = function(artist,cb) {
-    db.find({artist:artist}, function(err, docs) {
+    db.find({artist:artist}).sort({'track.no':1}).exec(function(err, docs) {
         if(cb) cb(null, docs);
     });
 };
