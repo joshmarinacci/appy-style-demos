@@ -387,6 +387,7 @@ var MainView = React.createClass({
                         columns={columns}
                         onSelectRow={this.selectSong}
                         doubleClicked={this.doubleClickedSong}
+                        onEnterPressed={this.doubleClickedSong}
                         cellCustomizer={SongCellCustomizer}
                         />
                 </div>

@@ -122,6 +122,9 @@ var ScrollTable = React.createClass({
         if(e.key == 'Enter') {
             e.stopPropagation();
             e.preventDefault();
+            if(this.props.onEnterPressed) {
+                this.props.onEnterPressed(this.getSelectedItem());
+            }
             return;
         }
     },
@@ -136,6 +139,10 @@ var ScrollTable = React.createClass({
         var dom = React.findDOMNode(child);
         dom.focus();
         this.props.onSelectRow(child.props.item);
+    },
+    getSelectedItem: function() {
+        var child = this.refs['child'+this.state.selectedIndex];
+        return child.props.item;
     },
     columnResized: function(col,width) {
         this.state.columnWidths[col] = width;
