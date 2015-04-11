@@ -289,26 +289,77 @@ var sources = [
     { type: 'source', title:'10 Most Played', icon:'fa fa-gears fa-fw'},
 ];
 
+var columnInfo = [
+    {
+        id: "play",
+        title: "",
+        resizable: false,
+        width: '20px',
+        sortable:false
+    },
+    {
+        id:'number',
+        title:'#',
+        resizable: false,
+        width: '20px',
+        sortable:true
+    },
+    {
+        id:'title',
+        title:'Title',
+        resizable:true,
+        sortable:true,
+        width:'200px'
+    },
+    {
+        id:'duration',
+        title:'Time',
+        sortable:true,
+        resizable:true,
+        width:'50px'
+    },
+    {
+        id:'album',
+        title:'Album',
+        sortable:true,
+        resizable:true,
+        width:'200px'
+    },
+    {
+        id:'artist',
+        title:'Artist',
+        sortable:true,
+        resizable:true,
+        width:'150px'
+    },
+    {
+        id:'genre',
+        title:'Genre',
+        sortable:true,
+        resizable:true,
+        width:'100px'
+    }
+];
 
-var SongCellCustomizer = function(song, columnName) {
-    if(columnName == '#') {
+var SongCellCustomizer = function(song, column) {
+    if(column.id == 'number') {
         var n = ' ';
         if(song.track && song.track.no) {
             n = song.track.no;
         }
         return <td>{n}</td>
     }
-    if(columnName == 'play') {
+    if(column.id == 'play') {
         if(SongDatabase.isPlaying() && SongDatabase.getPlayingSong()._id == song._id) {
             return <td><i className="fa fa-volume-up"></i></td>
         }
         return <td>&nbsp;</td>
     }
-    if(columnName == 'duration') {
+    if(column.id == 'duration') {
         var dur = moment.duration(song.duration,'seconds');
         return <td>{dur.minutes()}:{dur.seconds()}</td>
     }
-    return <td>{song[columnName]}</td>;
+    return <td>{song[column.id]}</td>;
 };
 
 var MainView = React.createClass({
@@ -360,7 +411,6 @@ var MainView = React.createClass({
         SongDatabase.playSong(song);
     },
     render: function() {
-        var columns = ["play","#","title",'duration',"album","artist",'genre'];
         var playButtonClass = "fa no-bg";
        if(SongDatabase.isPlaying()) {
            playButtonClass += " fa-pause";
@@ -397,7 +447,7 @@ var MainView = React.createClass({
                 <div className='vbox grow'>
                     <ScrollingTable
                         items={this.state.songs}
-                        columns={columns}
+                        columnInfo={columnInfo}
                         onSelectRow={this.selectSong}
                         doubleClicked={this.doubleClickedSong}
                         onEnterPressed={this.doubleClickedSong}

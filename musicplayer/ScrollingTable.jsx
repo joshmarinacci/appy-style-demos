@@ -10,7 +10,7 @@ var TableRow = React.createClass({
         this.props.doubleClicked(this.props.item);
     },
     cellCustomizer: function(row, col) {
-        return <td>{row[col]}</td>
+        return <td>{row[col.id]}</td>
     },
     render: function() {
         var item = this.props.item;
@@ -24,11 +24,11 @@ var TableRow = React.createClass({
         if(this.props.cellCustomizer) {
             cust = this.props.cellCustomizer;
         }
-        var cols = this.props.columnNames.map(function(col){
-            var w = self.props.columnWidths[col];
+        var cols = this.props.columnInfo.map(function(col) {
+            var w = self.props.columnWidths[col.id];
             var cell = cust(item,col);
             return React.cloneElement(cell,{
-                key:col,
+                key:col.id,
                 style: {
                     minWidth:w,
                     maxWidth:w
@@ -71,7 +71,7 @@ var ColumnHeader = React.createClass({
         var fl = parseFloat(style.paddingLeft.substring(0,style.paddingLeft.length-2));
         var fr = parseFloat(style.paddingLeft.substring(0,style.paddingLeft.length-2));
         var nv = e.pageX - rect.left - (fl+fr);
-        this.props.onResize(this.props.name,nv);
+        this.props.onResize(this.props.column,nv);
         e.stopPropagation();
         e.preventDefault();
     },
@@ -87,7 +87,7 @@ var ColumnHeader = React.createClass({
                         maxWidth:this.props.width,
                         position: 'relative'
                         }}
-                >{this.props.name} <i
+                >{this.props.column.title} <i
                 ref="handle"
                 className="drag-handle"
                 onMouseDown={this.onMouseDown}
@@ -145,16 +145,16 @@ var ScrollTable = React.createClass({
         return child.props.item;
     },
     columnResized: function(col,width) {
-        this.state.columnWidths[col] = width;
+        this.state.columnWidths[col.id] = width;
         this.setState({
             columnWidths:this.state.columnWidths
         })
     },
     componentWillReceiveProps: function(newProps) {
-        if(newProps.columns) {
+        if(newProps.columnInfo) {
             var widths = {};
-            newProps.columns.forEach(function(col) {
-                widths[col] = 200;
+            newProps.columnInfo.forEach(function(col) {
+                widths[col.id] = col.width;
             });
             this.setState({
                 columnWidths:widths
@@ -164,11 +164,12 @@ var ScrollTable = React.createClass({
     render: function() {
         var self = this;
 
-        var headers = this.props.columns.map(function(col) {
+        var headers = this.props.columnInfo.map(function(col) {
             return <ColumnHeader
-                key={col} name={col}
+                key={col.id}
+                column={col}
                 onResize={self.columnResized}
-                width={self.state.columnWidths[col]}
+                width={self.state.columnWidths[col.id]}
                 />
         });
         var rows = this.props.items.map(function(item,i) {
@@ -179,13 +180,13 @@ var ScrollTable = React.createClass({
                 index={i}
                 selectedIndex={self.state.selectedIndex}
                 setSelected={self.setSelected}
-                columnNames={self.props.columns}
+                columnInfo={self.props.columnInfo}
                 columnWidths={self.state.columnWidths}
                 doubleClicked={self.props.doubleClicked}
                 cellCustomizer={self.props.cellCustomizer}
                 />;
         });
-        return (
+            return (
             <div id="wrapper">
                 <table tabIndex="0">
                     <thead>{headers}</thead>
