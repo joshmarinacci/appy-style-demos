@@ -68,6 +68,12 @@ exports.getArtists = function(cb) {
 
 exports.getSongsForArtist = function(artist,cb) {
     db.find({artist:artist}).sort({'track.no':1}).exec(function(err, docs) {
+        docs.forEach(function(doc) {
+            //dont transfer picture metadata
+            if(doc.picture) {
+                delete doc.picture;
+            }
+        });
         if(cb) cb(null, docs);
     });
 };
