@@ -43,17 +43,41 @@ var TableRow = React.createClass({
     }
 });
 
+
 var ColumnHeader = React.createClass({
-    getInitialState: function() {
+    orders: {
+        asc: 'asc',
+        des: 'des',
+        non: 'non'
+    },
+    getInitialState:function() {
         return {
-            dragging:false
+            dragging:false,
+            order: this.orders.non
+        }
+    },
+    clicked: function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var order = this.state.order;
+        switch(this.state.order) {
+            case this.orders.non: order = this.orders.asc; break;
+            case this.orders.asc: order = this.orders.des; break;
+            case this.orders.des: order = this.orders.non; break;
+        }
+        this.setState({order: order});
+        if(this.props.onSortChange) {
+            this.props.onSortChange(this.props.column, order);
         }
     },
     onMouseDown: function(e) {
-        this.setState({
-            dragging:true
-        });
         e.preventDefault();
+        e.stopPropagation();
+        if(this.props.column.resizable === true) {
+            this.setState({
+                dragging: true
+            });
+        }
     },
     componentDidUpdate: function(prevProps, prevState) {
         if(this.state.dragging == true && prevState.dragging == false) {
@@ -76,20 +100,43 @@ var ColumnHeader = React.createClass({
         e.preventDefault();
     },
     onMouseUp: function (e) {
-        this.setState({dragging:false});
         e.stopPropagation();
         e.preventDefault();
+        this.setState({dragging:false});
     },
     render: function() {
+        var sort_class = "fa";
+        if(this.state.order == this.orders.non) {
+            sort_class += " fa-sort";
+        }
+        if(this.state.order == this.orders.asc) {
+            sort_class += " fa-sort-asc";
+        }
+        if(this.state.order == this.orders.des) {
+            sort_class += " fa-sort-desc";
+        }
+        if(this.props.column.sortable === false) {
+            sort_class = "";
+        }
+        var drag_class = "";
+        if(this.props.column.resizable === true) {
+            drag_class += "drag-handle";
+        }
         return <th ref="header"
                    style={{
                         minWidth:this.props.width,
                         maxWidth:this.props.width,
                         position: 'relative'
                         }}
-                >{this.props.column.title} <i
+                   onClick={this.clicked}
+                ><span className='grow'>{this.props.column.title}</span>
+            <i className={sort_class}
+               style={{float: 'right'}}
+                ></i>
+            <i
                 ref="handle"
-                className="drag-handle"
+                className={drag_class}
+                style={{float: 'right'}}
                 onMouseDown={this.onMouseDown}
             ></i></th>
     }
@@ -170,6 +217,7 @@ var ScrollTable = React.createClass({
                 column={col}
                 onResize={self.columnResized}
                 width={self.state.columnWidths[col.id]}
+                onSortChange={self.props.onSortChange}
                 />
         });
         var rows = this.props.items.map(function(item,i) {

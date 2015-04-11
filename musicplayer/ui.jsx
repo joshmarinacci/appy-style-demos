@@ -28,16 +28,16 @@ var dummy_data = {
             },
             {
                 title:"rock out",
-                artist:"foo",
-                album:"foozer",
-                genre:"foorock",
+                artist:"bar",
+                album:"grazer",
+                genre:"redoo",
                 duration:338
             },
             {
                 title:"rock on",
-                artist:"foo",
-                album:"foozer",
-                genre:"foorock",
+                artist:"baz",
+                album:"bubbz",
+                genre:"rokfoo",
                 duration:438
             }
         ]
@@ -410,6 +410,26 @@ var MainView = React.createClass({
     doubleClickedSong: function(song) {
         SongDatabase.playSong(song);
     },
+    sortChanged: function(column,order) {
+        function asc(a,b){
+            if(a > b) return 1;
+            if(a < b) return -1;
+            return 0;
+        }
+        function desc(a,b){
+            if(a < b) return 1;
+            if(a > b) return -1;
+            return 0;
+        }
+        this.state.songs.sort(function(a,b) {
+            if(order == 'asc') return asc(a[column.id],b[column.id]);
+            if(order == 'des') return desc(a[column.id],b[column.id]);
+            return 1;
+        });
+        this.setState({
+            songs: this.state.songs
+        });
+    },
     render: function() {
         var playButtonClass = "fa no-bg";
        if(SongDatabase.isPlaying()) {
@@ -451,6 +471,7 @@ var MainView = React.createClass({
                         onSelectRow={this.selectSong}
                         doubleClicked={this.doubleClickedSong}
                         onEnterPressed={this.doubleClickedSong}
+                        onSortChange={this.sortChanged}
                         cellCustomizer={SongCellCustomizer}
                         />
                 </div>
