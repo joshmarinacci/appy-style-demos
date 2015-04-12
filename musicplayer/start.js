@@ -86,6 +86,20 @@ object_registry.player = {
                     song: song
                 });
             })
+            .on('end', function() {
+                sendNotification({
+                    type:'status-update',
+                    playing:false,
+                    ended:true,
+                    song: song
+                });
+            })
+            .on('done', function() {
+                console.log('done');
+            })
+            .on('close', function() {
+                console.log('closed');
+            })
             .pipe(this.speaker);
     },
     stop: function(cb) {

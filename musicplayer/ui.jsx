@@ -173,7 +173,7 @@ var SongDatabase = {
     },
     playNextSong: function() {
         var n = this.getPlayingSongIndex();
-        if(!n || n <= 0) {
+        if(typeof n === 'undefined' || n < 0) {
             n = 0;
         } else {
             n++;
@@ -229,6 +229,9 @@ var SongDatabase = {
         this.playing = msg.playing;
         if(msg.song) {
             this.playingSong = msg.song;
+        }
+        if(msg.ended && msg.ended === true) {
+            this.playNextSong();
         }
         this.notify('status-update');
     }
