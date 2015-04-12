@@ -128,7 +128,7 @@ var ColumnHeader = React.createClass({
                         maxWidth:this.props.width,
                         position: 'relative'
                         }}
-                   onClick={this.clicked}
+                   onMouseDown={this.clicked}
                 ><span className='grow'>{this.props.column.title}</span>
             <i className={sort_class}
                style={{float: 'right'}}
