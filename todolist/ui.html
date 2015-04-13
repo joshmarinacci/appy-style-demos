@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link href="../bower_components/appy-style/newstart.css" rel="stylesheet">
+    <link href="../bower_components/font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Lato:100,300,400,700,900,100italic,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
+    <style type="text/css">
+        body {
+            font-family: 'Open Sans', sans-serif;
+            font-family: 'Lato', sans-serif;
+            font-weight: 300;
+            font-size: 12pt;
+        }
+        #sources-pane, #list-view {
+            min-width: 12em;
+            border-right-width: 1px;
+            border-right-style: solid;
+        }
+        #list-view li {
+            display: flex;
+            flex-direction: row;
+            border-bottom-width: 1px;
+            border-bottom-style: solid;
+            padding: 0.5em;
+        }
+        #list-view li .contents {
+            flex: 1;
+        }
+        #list-view li .group .button {
+            border: 0px solid darkgray;
+            background-color: transparent;
+            padding:0;
+            margin: 0;
+        }
+        #list-view li .group .button:hover {
+            color: blue;
+        }
+        #list-view li .group .button:checked {
+            color: blue;
+            background-color: transparent;
+        }
+        #list-view li .contents .text {
+            padding: 0.5em;
+        }
+        #list-view li .contents .tags {
+            font-size: 80%;
+            padding-left: 0.5em;
+        }
+        #list-view li {
+            transition: border-width 200ms;
+        }
+
+        #list-view li.drop-target-top {
+            border-top: 50px solid darkgray;
+            border-bottom: 0px solid darkgray;
+        }
+        #list-view li.drop-target-bottom {
+            border-bottom: 50px solid darkgray;
+            border-top: 0px solid darkgray;
+        }
+
+    </style>
+
+</head>
+<body>
+
+<div id="main-view"></div>
+
+</body>
+<script src="./bundle.js"></script>
+</html>

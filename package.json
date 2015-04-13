@@ -9,6 +9,7 @@
     "build-musicplayer": "browserify -d -t reactify musicplayer/ui.jsx -o musicplayer/bundle.js",
     "watch-musicplayer": "watchify   -d -t reactify musicplayer/ui.jsx -o musicplayer/bundle.js",
     "musicplayer": "node musicplayer/start.js",
+    "watch-todolist": "watchify -d -t reactify todolist/ui.jsx -o todolist/bundle.js",
     "postinstall": "node_modules/bower/bin/bower install -F"
   },
   "repository": {
