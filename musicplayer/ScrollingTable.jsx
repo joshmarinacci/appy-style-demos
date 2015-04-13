@@ -12,6 +12,17 @@ var TableRow = React.createClass({
     cellCustomizer: function(row, col) {
         return <td>{row[col.id]}</td>
     },
+    shouldComponentUpdate: function(nextProps, nextState) {
+        //skip if the only change is selection and this row
+        //isn't the old or new selected object
+        if(this.props.item === nextProps.item) {
+            if(this.props.index != this.props.selectedIndex &&
+                this.props.index != nextProps.selectedIndex) {
+                return false;
+            }
+        }
+        return true;
+    },
     render: function() {
         var item = this.props.item;
         var selected = this.props.index == this.props.selectedIndex;
