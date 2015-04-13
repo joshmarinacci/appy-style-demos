@@ -121,6 +121,9 @@ var SongDatabase = {
     getSongsForArtist: function(artist, cb) {
         this.sendThrustCallbackRequest('database','getSongsForArtist',[artist],cb, dummy_data.songs.foo);
     },
+    getArchiveStats: function(cb) {
+        this.sendThrustCallbackRequest('database','getArchiveStats',[],cb,null);
+    },
 
     playing: false,
     currentPlayset: [],
@@ -370,7 +373,11 @@ var MainView = React.createClass({
         return {
             playing: false,
             artists: [],
-            songs:[]
+            songs:[],
+            stats: {
+                songCount:0,
+                diskSize:0
+            }
         }
     },
     componentDidMount: function() {
@@ -379,6 +386,15 @@ var MainView = React.createClass({
             SongDatabase.getArtists(function(artists) {
                 self.setState({
                     artists:artists
+                })
+            });
+            SongDatabase.getArchiveStats(function(stats) {
+                d(stats);
+                self.setState({
+                    stats: {
+                        songCount: stats.count,
+                        diskSize: stats.filesize
+                    }
                 })
             });
         });
@@ -484,7 +500,7 @@ var MainView = React.createClass({
                 <button className="fa fa-random no-bg"></button>
                 <button className="fa fa-repeat no-bg"></button>
                 <span className="grow"></span>
-                <span>3333 items, 105 hrs total time, 21GB</span>
+                <span>{this.state.stats.songCount} songs, {(this.state.stats.diskSize/1024/1024).toFixed(2)} MB</span>
                 <span className="grow"></span>
                 <button className="fa fa-eject no-bg"></button>
             </footer>
