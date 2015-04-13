@@ -5,6 +5,7 @@ var fs = require('fs');
 var lame = require('lame');
 var Speaker = require('speaker');
 var mm = require('musicmetadata');
+var stream = require('stream');
 
 /*
 fs.createReadStream(process.argv[2])
@@ -36,12 +37,24 @@ bitrate = 160kbs
 
 var file = "/Users/josh/Music/iTunes/iTunes Media/Music/ABBA/Gold/09 Money, Money, Money.mp3";
 
-var speaker = new Speaker;
 var read_stream = fs.createReadStream(file);
-read_stream.pipe(new lame.Decoder()).pipe(speaker);
+var dec = new lame.Decoder();
+var speaker = new Speaker;
 
 
-setTimeout(function() {
-    console.log("pausing",read_stream.isPaused());
-    //read_stream.pause();
-},2000);
+var trans = new stream.Transform();
+var total = 0;
+//44khz * 16bit samples * 2 channels = stream bytes per second
+var rate = 44100*2*2;
+trans._transform = function(chunk, encoding, done) {
+    total += chunk.length;
+    console.log("time = ", (total/rate).toFixed(2));
+    this.push(chunk);
+    done();
+};
+//final bytes = 751
+read_stream.pipe(dec)
+    .on('format',function(err,fmt){
+        console.log(err,fmt);
+    })
+    .pipe(trans).pipe(speaker);

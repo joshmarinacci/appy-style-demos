@@ -23,6 +23,7 @@ player object
         repeat, shuffle, etc.
 
  */
+var stream = require('stream');
 var fs = require('fs');
 var lame = require('lame');
 var Speaker = require('speaker');
@@ -70,6 +71,23 @@ function sendNotification(msg) {
 }
 
 var object_registry = {};
+
+function TimeCounterTransform() {
+    stream.Transform.call(this);
+    this.total = 0;
+    this.rate = 44100*2*2;
+}
+util.inherits(TimeCounterTransform,stream.Transform);
+TimeCounterTransform.prototype._transform = function(chunk, encoding, done) {
+    this.total += chunk.length;
+    sendNotification({
+        type:'current-time',
+        time: (this.total/this.rate)
+    });
+    this.push(chunk);
+    done();
+};
+
 object_registry.player = {
     play: function(song,cb) {
         if(song == null) {
@@ -100,6 +118,7 @@ object_registry.player = {
             .on('close', function() {
                 console.log('closed');
             })
+            .pipe(new TimeCounterTransform())
             .pipe(this.speaker);
     },
     stop: function(cb) {

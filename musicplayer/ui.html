@@ -40,8 +40,19 @@
             padding: 0.5em 3em;
             margin: 5px 1em;
             min-width: 20em;
+            align-items: stretch;
+            display: flex;
+            flex-direction: column;
         }
-        #display-song { font-size: 150%; }
+        #music-display progress {
+            width: 100%;
+        }
+        #display-song { font-size: 150%; text-align: center; }
+        #display-artist {
+            text-align: center;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
         #volume { max-width: 5em; }
 
         .no-bg {

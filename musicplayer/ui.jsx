@@ -82,6 +82,11 @@ var SongDatabase = {
                     self.notify('database-loaded');
                     return;
                 }
+                if(msg.type == 'current-time') {
+                    self.currentTime = msg.time;
+                    self.notify('current-time');
+                    return;
+                }
                 if(msg.type == 'status-update') {
                     self.setStatusFromNotification(msg);
                     return;
@@ -157,6 +162,9 @@ var SongDatabase = {
 
     getSongAtIndex: function(n) {
         return this.currentPlayset[n];
+    },
+    getCurrentTime: function() {
+        return this.currentTime;
     },
     playPreviousSong: function() {
         var n = this.getPlayingSongIndex();
@@ -258,7 +266,9 @@ var MusicDisplay = React.createClass({
             title:'---',
             artist:'---',
             album:'---',
-            playing: false
+            playing: false,
+            currentTime:0,
+            duration:100
         }
     },
     componentDidMount: function() {
@@ -273,14 +283,21 @@ var MusicDisplay = React.createClass({
                 album: song.album,
                 playing: playing
             });
-        })
+        });
+        SongDatabase.onChange('current-time',function() {
+            self.setState({
+                duration:SongDatabase.getPlayingSong().duration,
+                currentTime: SongDatabase.getCurrentTime()
+            });
+        });
     },
     render: function() {
-        return (<div className="vbox align-center" id="music-display">
-            <span className="grow" id="display-song">{this.state.title}</span>
-            <span id="display-artist">{this.state.artist} - {this.state.album}</span>
-            <progress min="0" max="100" value="20"/>
-            <span id='playing-state'>{this.state.playing?"playing":"still"}</span>
+        return (
+            <div className="vbox align-center" id="music-display">
+                <span className="grow" id="display-song">{this.state.title}</span>
+                <span id="display-artist">{this.state.artist} - {this.state.album}</span>
+                <progress min="0" max={this.state.duration} value={this.state.currentTime}/>
+                <span id='playing-state'>{this.state.playing?"playing":"still"}</span>
             </div>)
     }
 });
