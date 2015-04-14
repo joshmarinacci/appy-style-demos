@@ -308,6 +308,51 @@ var SourceItem = React.createClass({
     }
 });
 
+var ItemInput = React.createClass({
+    getInitialState: function() {
+        return {
+            text:'',
+            tags:''
+        }
+    },
+    entered: function(e) {
+        if(e.key == 'Enter') {
+            this.addItem();
+        }
+    },
+    changedText: function() {
+        this.setState({
+            text: this.refs.itemText.getDOMNode().value
+        });
+    },
+    changedTags: function() {
+        this.setState({
+            tags: this.refs.itemTags.getDOMNode().value
+        });
+    },
+    render: function() {
+        return (<div className="form">
+            <div className="row">
+                <input ref="itemText" type="text" value={this.state.text}
+                       className="grow" placeholder="item text"
+                       onKeyPress={this.entered}
+                       onChange={this.changedText}
+                    />
+            </div>
+            <div className='row'>
+                <input ref="itemTags" type="text" value={this.state.tags}
+                       className="grow" placeholder="tags"
+                       onKeyPress={this.entered}
+                       onChange={this.changedTags}
+                    />
+                <button className="fa fa-star"></button>
+                <button className="fa fa-star-half-empty"></button>
+                <button className="fa fa-star-o"></button>
+            </div>
+        </div>)
+    }
+});
+
 var MainView = React.createClass({
     getInitialState: function() {
         return {
@@ -322,16 +367,6 @@ var MainView = React.createClass({
         ListModel.on(function() {
             self.forceUpdate();
         })
-    },
-    changed: function() {
-        this.setState({
-            text: this.refs.itemText.getDOMNode().value
-        });
-    },
-    entered: function(e) {
-        if(e.key == 'Enter') {
-            this.addItem();
-        }
     },
     addItem: function() {
         ListModel.insertItem(this.state.text, this.state.currentTime);
@@ -403,17 +438,7 @@ var MainView = React.createClass({
                     </ul>
                 </div>
                 <div className="vbox grow" id="list-view">
-                    <div className="form">
-                        <div className="group">
-                            <input ref="itemText" type="text" value={this.state.text}
-                                   className="grow" placeholder="add item"
-                                   onKeyPress={this.entered}
-                                   onChange={this.changed}
-                                />
-                            <button className="fa fa-forward"></button>
-                            <button className="fa fa-fast-forward"></button>
-                        </div>
-                    </div>
+                    <ItemInput/>
                     <ul className="list scroll grow">{todoItems}</ul>
                 </div>
             </div>
