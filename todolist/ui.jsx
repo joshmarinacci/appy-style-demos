@@ -1,3 +1,16 @@
+/*
+
+//check item to mark as completed
+shortcut to mark as completed
+shortcut to move up and down
+
+//switching to different time updates the item and resyncs the view
+
+
+
+ */
+
+
 var React = require('react');
 
 var ListModel = {
@@ -15,25 +28,29 @@ var ListModel = {
             id:'1',
             text:'pack bags and clothing and stuff',
             tags:['travel','work'],
-            scheduled: 'today'
+            scheduled: 'today',
+            completed:true
         },
         {
             id:'2',
             text:'post office',
             tags:['home'],
-            scheduled: 'today'
+            scheduled: 'today',
+            completed:false
         },
         {
             id:'3',
             text:'post office 3',
             tags:['home'],
-            scheduled: 'today'
+            scheduled: 'today',
+            completed:true
         },
         {
             id:'4',
             text:'post office 16',
             tags:['home'],
-            scheduled: 'today'
+            scheduled: 'today',
+            completed:false
         },
         {
             id:'asdf6623e',
@@ -108,6 +125,16 @@ var ListModel = {
         var n = this.findItemIndexById(tid);
         this.items.splice(n+1,0,item);
         this.notify();
+    },
+    toggleCompleted: function(id) {
+        var item = this.findItemById(id);
+        item.completed = item.completed !== true;
+        this.notify();
+    },
+    setScheduled: function(id, sched) {
+        var item = this.findItemById(id);
+        item.scheduled = sched;
+        this.notify();
     }
 };
 
@@ -119,7 +146,6 @@ var ListItem = React.createClass({
         }
     },
     dragStart: function(e) {
-        console.log("starting");
         e.dataTransfer.setData('text/plain', this.props.item.id);
         this.setState({
             dragging:true
@@ -127,7 +153,6 @@ var ListItem = React.createClass({
     },
     dragEnd: function(e) {
         e.preventDefault();
-        console.log("ended");//,e,e.target,e.relatedTarget,e.currentTarget);
         /*
         this.setState({
             dragging:false
@@ -142,7 +167,6 @@ var ListItem = React.createClass({
         */
     },
     drop: function(e) {
-        console.log("received the drop event",e.dataTransfer.getData('text/plain'));
         var rect = this.refs.item.getDOMNode().getBoundingClientRect();
         this.props.onDrop({
             itemid: e.dataTransfer.getData('text/plain'),
@@ -162,6 +186,18 @@ var ListItem = React.createClass({
             bounds: rect
         });
     },
+    toggleCompleted: function() {
+        ListModel.toggleCompleted(this.props.item.id);
+    },
+    setToday: function() {
+        ListModel.setScheduled(this.props.item.id,'today');
+    },
+    setTomorrow: function() {
+        ListModel.setScheduled(this.props.item.id,'tomorrow');
+    },
+    setLater: function() {
+        ListModel.setScheduled(this.props.item.id,'later');
+    },
     render: function() {
         var cn = "";
         if(this.props.dropTarget == this.props.item) {
@@ -180,18 +216,41 @@ var ListItem = React.createClass({
                 onDrop={this.drop}
                 className={cn}
             >
+            <input type='checkbox'
+                   checked={this.props.item.completed}
+                   onChange={this.toggleCompleted}
+                ></input>
             <div className="contents">
                 <div className="contents">
-                    <div className="text">{this.props.item.text}</div>
+                    <div className="text">
+                        {this.props.item.text}</div>
                     <div className="tags">
                         <i className="fa fa-tag"></i> {this.props.item.tags}
                     </div>
                 </div>
             </div>
             <div className="group">
-                <input type='radio' name={this.props.item.id+'time'} className="button fa fa-star fa-fw"></input>
-                <input type='radio' name={this.props.item.id+'time'} className="button fa fa-star-half-empty fa-fw"></input>
-                <input type='radio' name={this.props.item.id+'time'} className="button fa fa-star-o fa-fw"></input>
+                <input type='radio'
+                       name={this.props.item.id+'time'}
+                       ref="scheduled"
+                       className="button fa fa-star fa-fw"
+                       checked={this.props.item.scheduled=='today'}
+                       onChange={this.setToday}
+                    ></input>
+                <input type='radio'
+                       name={this.props.item.id+'time'}
+                       ref="scheduled"
+                       className="button fa fa-star-half-empty fa-fw"
+                       checked={this.props.item.scheduled=='tomorrow'}
+                       onChange={this.setTomorrow}
+                    ></input>
+                <input type='radio'
+                       name={this.props.item.id+'time'}
+                       ref="scheduled"
+                       className="button fa fa-star-o fa-fw"
+                       checked={this.props.item.scheduled=='later'}
+                       onChange={this.setLater}
+                    ></input>
             </div>
         </li>
     }
@@ -220,6 +279,10 @@ var MainView = React.createClass({
         }
     },
     componentDidMount: function() {
+        var self = this;
+        ListModel.on(function() {
+            self.forceUpdate();
+        })
     },
     changed: function() {
         this.setState({
