@@ -1,12 +1,18 @@
 /*
 
 //check item to mark as completed
+//switching to different time updates the item and resyncs the view
+//make tag lists work
+//add 'all' list
+
 shortcut to mark as completed
 shortcut to move up and down
+move completed items to the bottom. no longer draggable
 
-//switching to different time updates the item and resyncs the view
-
-
+let you add tags when entering a new item
+make items editable by selecting 'edit' button which turns text
+    into editable text field
+persist items to real database
 
  */
 
@@ -65,10 +71,22 @@ var ListModel = {
             scheduled:'later'
         }
     ],
-    getItems: function(time) {
-        return this.items.filter(function(item) {
-            return item.scheduled === time;
-        });
+    getItems: function(source) {
+        console.log("getting items",source);
+        if(source == null) return [];
+        if(source.type == 'all') {
+            return this.items;
+        }
+        if(source.type == 'time') {
+            return this.items.filter(function (item) {
+                return item.scheduled === source.id;
+            });
+        }
+        if(source.type == 'tag') {
+            return this.items.filter(function (item) {
+                return item.tags.indexOf(source.id) >= 0;
+            });
+        }
     },
     insertItem: function(text,time) {
         this.items.unshift({
@@ -82,22 +100,54 @@ var ListModel = {
     getTimes: function() {
         return [
             {
+                type:'all',
+                id:'all',
+                title:'All',
+                icon: ''
+            },
+            {
+                type:'time',
                 id:'today',
                 title:'Today',
                 icon:'fa-star'
             },
             {
+                type:'time',
                 id:'tomorrow',
                 title:'Tomorrow',
                 icon:'fa-star-half-empty'
             },
             {
+                type:'time',
                 id:'later',
                 title:'Later',
                 icon:'fa-star-o'
             }
         ]
     },
+    getTags: function() {
+        return [
+            {
+                type:'tag',
+                id: "home",
+                title:'Home',
+                icon:'fa-tag'
+            },
+            {
+                type:'tag',
+                id:"travel",
+                title:'Travel',
+                icon:'fa-tag'
+            },
+            {
+                type:'tag',
+                id:'work',
+                title:'Work',
+                icon:'fa-tag'
+            }
+        ];
+    },
+
     findItemIndexById: function(id) {
         var n = -1;
         this.items.forEach(function(item, i){
@@ -153,18 +203,6 @@ var ListItem = React.createClass({
     },
     dragEnd: function(e) {
         e.preventDefault();
-        /*
-        this.setState({
-            dragging:false
-        });
-        var rect = this.refs.item.getDOMNode().getBoundingClientRect();
-        this.props.onDragEnd({
-            item: this.props.item,
-            clientX:e.clientX,
-            clientY:e.clientY,
-            bounds: rect
-        });
-        */
     },
     drop: function(e) {
         var rect = this.refs.item.getDOMNode().getBoundingClientRect();
@@ -222,10 +260,11 @@ var ListItem = React.createClass({
                 ></input>
             <div className="contents">
                 <div className="contents">
-                    <div className="text">
-                        {this.props.item.text}</div>
+                    <div className="text">{this.props.item.text}</div>
                     <div className="tags">
-                        <i className="fa fa-tag"></i> {this.props.item.tags}
+                        <i className="fa fa-tag"></i> {this.props.item.tags.map(function(tag) {
+                        return <span key={tag}> {tag}, </span>
+                    })}
                     </div>
                 </div>
             </div>
@@ -258,14 +297,14 @@ var ListItem = React.createClass({
 
 var SourceItem = React.createClass({
     clicked: function(v) {
-        this.props.onSelect(this.props.time);
+        this.props.onSelect(this.props.item);
     },
     render: function() {
-        var cn = "fa fa-fw " + this.props.time.icon;
-        return (<li key={this.props.time.id}
+        var cn = "fa fa-fw " + this.props.item.icon;
+        return (<li key={this.props.item.id}
                     onClick={this.clicked}>
             <i className={cn}></i>
-            {this.props.time.title}</li>);
+            {this.props.item.title}</li>);
     }
 });
 
@@ -273,7 +312,7 @@ var MainView = React.createClass({
     getInitialState: function() {
         return {
             text: '',
-            currentTime:'today',
+            currentSource: null,
             dragging:false,
             dropTarget:null
         }
@@ -300,9 +339,9 @@ var MainView = React.createClass({
             text:""
         });
     },
-    sourceSelected: function(time) {
+    sourceSelected: function(item) {
         this.setState({
-            currentTime: time.id
+            currentSource: item
         })
     },
     dragOver: function(info) {
@@ -332,7 +371,7 @@ var MainView = React.createClass({
     },
     render: function() {
         var self = this;
-        var todoItems = ListModel.getItems(this.state.currentTime).map(function(item) {
+        var todoItems = ListModel.getItems(this.state.currentSource).map(function(item) {
             return <ListItem key={item.id} item={item}
                              onDragOver={self.dragOver}
                              onDragEnd={self.dragEnd}
@@ -342,7 +381,10 @@ var MainView = React.createClass({
                 />
         });
         var times = ListModel.getTimes().map(function(time) {
-            return <SourceItem key={time.id} time={time} onSelect={self.sourceSelected}/>
+            return <SourceItem key={time.id} item={time} onSelect={self.sourceSelected}/>
+        });
+        var tags = ListModel.getTags().map(function(tag) {
+            return <SourceItem key={tag.id} item={tag} onSelect={self.sourceSelected}/>
         });
 
         return(
@@ -357,12 +399,7 @@ var MainView = React.createClass({
                         <li className="header">When</li>
                         {times}
                         <li className="header">Categories</li>
-                        <li><i className="fa fa-tag"></i> command center</li>
-                        <li><i className="fa fa-tag"></i> travel</li>
-                        <li><i className="fa fa-tag"></i> work</li>
-                        <li><i className="fa fa-tag"></i> house</li>
-                        <li><i className="fa fa-tag"></i> xmasgame</li>
-                        <li><i className="fa fa-tag"></i> presents</li>
+                        {tags}
                     </ul>
                 </div>
                 <div className="vbox grow" id="list-view">
