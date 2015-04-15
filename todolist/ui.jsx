@@ -5,8 +5,9 @@
 //make tag lists work
 //add 'all' list
 
-shortcut to mark as completed
-shortcut to move up and down
+//shortcut to mark as completed
+//shortcut to move up and down
+
 move completed items to the bottom. no longer draggable
 
 let you add tags when entering a new item
@@ -88,11 +89,11 @@ var ListModel = {
             });
         }
     },
-    insertItem: function(text,time) {
+    insertItem: function(text,tags,time) {
         this.items.unshift({
             id:'id_'+Math.random(),
             text:text,
-            tags:[],
+            tags:tags.split(","),
             scheduled:time
         });
         this.notify();
@@ -282,23 +283,26 @@ var ListItem = React.createClass({
                 <input type='radio'
                        name={this.props.item.id+'time'}
                        ref="scheduled"
-                       className="button fa fa-star fa-fw"
+                       className="button fa fa-star"
+                       value=""
                        checked={this.props.item.scheduled=='today'}
                        onChange={this.setToday}
                     ></input>
                 <input type='radio'
                        name={this.props.item.id+'time'}
                        ref="scheduled"
-                       className="button fa fa-star-half-empty fa-fw"
+                       className="button fa fa-star-half-empty"
                        checked={this.props.item.scheduled=='tomorrow'}
                        onChange={this.setTomorrow}
+                       value=""
                     ></input>
                 <input type='radio'
                        name={this.props.item.id+'time'}
                        ref="scheduled"
-                       className="button fa fa-star-o fa-fw"
+                       className="button fa fa-star-o"
                        checked={this.props.item.scheduled=='later'}
                        onChange={this.setLater}
+                       value=""
                     ></input>
             </div>
         </li>
@@ -330,6 +334,13 @@ var ItemInput = React.createClass({
             this.addItem();
         }
     },
+    addItem: function() {
+        ListModel.insertItem(this.state.text, this.state.tags, this.props.time.id);
+        this.setState({
+            text:"",
+            tags:""
+        });
+    },
     changedText: function() {
         this.setState({
             text: this.refs.itemText.getDOMNode().value
@@ -355,9 +366,11 @@ var ItemInput = React.createClass({
                        onKeyPress={this.entered}
                        onChange={this.changedTags}
                     />
-                <button className="fa fa-star"></button>
-                <button className="fa fa-star-half-empty"></button>
-                <button className="fa fa-star-o"></button>
+                <div className="group">
+                    <button className="fa fa-star"></button>
+                    <button className="fa fa-star-half-empty"></button>
+                    <button className="fa fa-star-o"></button>
+                </div>
             </div>
         </div>)
     }
@@ -370,7 +383,7 @@ var MainView = React.createClass({
             currentSource: null,
             dragging:false,
             dropTarget:null,
-            selectedIndex:0,
+            selectedIndex:0
         }
     },
     componentDidMount: function() {
@@ -378,12 +391,6 @@ var MainView = React.createClass({
         ListModel.on(function() {
             self.forceUpdate();
         })
-    },
-    addItem: function() {
-        ListModel.insertItem(this.state.text, this.state.currentTime);
-        this.setState({
-            text:""
-        });
     },
     sourceSelected: function(item) {
         this.setState({
@@ -514,7 +521,7 @@ var MainView = React.createClass({
                     </ul>
                 </div>
                 <div className="vbox grow" id="list-view">
-                    <ItemInput/>
+                    <ItemInput time={this.state.currentSource}/>
                     <ul className="list scroll grow"
                         onKeyDown={this.keyPressed}
                         >{todoItems}</ul>
