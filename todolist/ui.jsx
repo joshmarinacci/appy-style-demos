@@ -195,6 +195,11 @@ var ListItem = React.createClass({
             under:false
         }
     },
+    clicked: function(e) {
+        e.preventDefault();
+        this.props.setSelected(this.props.index);
+        this.refs.item.getDOMNode().focus();
+    },
     dragStart: function(e) {
         e.dataTransfer.setData('text/plain', this.props.item.id);
         this.setState({
@@ -245,6 +250,9 @@ var ListItem = React.createClass({
                 cn += ' drop-target-bottom';
             }
         }
+        if(this.props.index == this.props.selectedIndex) {
+            cn += " selected";
+        }
         return <li
                 ref="item"
                 draggable="true"
@@ -252,6 +260,8 @@ var ListItem = React.createClass({
                 onDragEnd={this.dragEnd}
                 onDragOver={this.dragOver}
                 onDrop={this.drop}
+                onClick={this.clicked}
+                tabIndex="1"
                 className={cn}
             >
             <input type='checkbox'
@@ -359,7 +369,8 @@ var MainView = React.createClass({
             text: '',
             currentSource: null,
             dragging:false,
-            dropTarget:null
+            dropTarget:null,
+            selectedIndex:0,
         }
     },
     componentDidMount: function() {
@@ -404,15 +415,80 @@ var MainView = React.createClass({
             dropy:-1
         })
     },
+    keyPressed: function(e) {
+        if(e.metaKey == true && e.key == 'ArrowDown') {
+            var len = ListModel.getItems(this.state.currentSource).length;
+            if(this.state.selectedIndex >= len-1) return;
+            var index = this.state.selectedIndex;
+            var child = this.refs['child'+index];
+            var sid = child.props.item.id;
+            child = this.refs['child'+(index+1)];
+            var tid = child.props.item.id;
+            ListModel.moveItemAfter(sid,tid);
+            this.setSelected(this.state.selectedIndex+1);
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+        }
+        if(e.metaKey == true && e.key == 'ArrowUp') {
+            if(this.state.selectedIndex <= 0) return;
+            var index = this.state.selectedIndex;
+            var child = this.refs['child'+index];
+            var sid = child.props.item.id;
+            child = this.refs['child'+(index-1)];
+            var tid = child.props.item.id;
+            ListModel.moveItemBefore(sid,tid);
+            this.setSelected(this.state.selectedIndex-1);
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+        }
+        if(e.metaKey == true && e.keyCode == 190) { // meta-period
+            var index = this.state.selectedIndex;
+            var child = this.refs['child'+index];
+            ListModel.toggleCompleted(child.props.item.id);
+        }
+        if(e.key == 'ArrowDown') {
+            this.setSelected(this.state.selectedIndex+1);
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+        }
+        if(e.key == 'ArrowUp') {
+            this.setSelected(this.state.selectedIndex-1);
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+        }
+    },
+    setSelected: function(index) {
+        console.log("setting to selected",index);
+        if(index <0) index = 0;
+        var len = ListModel.getItems(this.state.currentSource).length;
+        if(index > len -1) {
+            index = len-1;
+        }
+        this.setState({
+            selectedIndex:index
+        });
+        var child = this.refs['child'+index];
+        var dom = React.findDOMNode(child);
+        dom.focus();
+    },
     render: function() {
         var self = this;
-        var todoItems = ListModel.getItems(this.state.currentSource).map(function(item) {
-            return <ListItem key={item.id} item={item}
+        var todoItems = ListModel.getItems(this.state.currentSource).map(function(item,i) {
+            return <ListItem key={item.id}
+                             item={item}
+                             ref={'child'+i}
+                             index={i}
                              onDragOver={self.dragOver}
                              onDragEnd={self.dragEnd}
                              dropTarget={self.state.dropTarget}
                              dropY={self.state.dropY}
                              onDrop={self.drop}
+                             selectedIndex={self.state.selectedIndex}
+                             setSelected={self.setSelected}
                 />
         });
         var times = ListModel.getTimes().map(function(time) {
@@ -439,7 +515,9 @@ var MainView = React.createClass({
                 </div>
                 <div className="vbox grow" id="list-view">
                     <ItemInput/>
-                    <ul className="list scroll grow">{todoItems}</ul>
+                    <ul className="list scroll grow"
+                        onKeyDown={this.keyPressed}
+                        >{todoItems}</ul>
                 </div>
             </div>
             <footer>
