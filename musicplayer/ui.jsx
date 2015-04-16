@@ -1,5 +1,6 @@
 var React = require('react');
 var CustomList = require('./CustomList.jsx');
+var ScrollingTable = require('./ScrollingTable.jsx');
 var ResizableColumn = require('./ResizableColumn.jsx');
 var moment = require('moment');
 
@@ -13,6 +14,35 @@ function d() {
 function dprint(obj) {
     console.log(JSON.stringify(obj,null,'  '));
 }
+
+var dummy_data = {
+    artists:["foo","bar","baz"],
+    songs: {
+        "foo":[
+            {
+                title:"rock in",
+                artist:"foo",
+                album:"foozer",
+                genre:"foorock",
+                duration:238
+            },
+            {
+                title:"rock out",
+                artist:"bar",
+                album:"grazer",
+                genre:"redoo",
+                duration:338
+            },
+            {
+                title:"rock on",
+                artist:"baz",
+                album:"bubbz",
+                genre:"rokfoo",
+                duration:438
+            }
+        ]
+    }
+};
 
 var SongDatabase = {
     songs:[],
@@ -52,6 +82,11 @@ var SongDatabase = {
                     self.notify('database-loaded');
                     return;
                 }
+                if(msg.type == 'current-time') {
+                    self.currentTime = msg.time;
+                    self.notify('current-time');
+                    return;
+                }
                 if(msg.type == 'status-update') {
                     self.setStatusFromNotification(msg);
                     return;
@@ -59,13 +94,9 @@ var SongDatabase = {
             });
             THRUST.remote.send({type:'running'});
         } else {
-            var artists = ["foo","bar","baz"];
-            var self = this;
-            artists.forEach(function(artist) {
-                for (var i = 0; i < 12; i++) {
-                    self.addSong({title: i+' foo bar baz mister foo bar baz and stuff', artist: artist, album: 'baz'});
-                }
-            });
+            setTimeout(function(){
+                self.notify("database-loaded");
+            },1000);
         }
     },
     isThrust: function() {
@@ -90,10 +121,13 @@ var SongDatabase = {
     },
 
     getArtists: function(cb) {
-        this.sendThrustCallbackRequest('database','getArtists',[],cb,[]);
+        this.sendThrustCallbackRequest('database','getArtists',[],cb,dummy_data.artists);
     },
     getSongsForArtist: function(artist, cb) {
-        this.sendThrustCallbackRequest('database','getSongsForArtist',[artist],cb, []);
+        this.sendThrustCallbackRequest('database','getSongsForArtist',[artist],cb, dummy_data.songs.foo);
+    },
+    getArchiveStats: function(cb) {
+        this.sendThrustCallbackRequest('database','getArchiveStats',[],cb,null);
     },
 
     playing: false,
@@ -129,6 +163,9 @@ var SongDatabase = {
     getSongAtIndex: function(n) {
         return this.currentPlayset[n];
     },
+    getCurrentTime: function() {
+        return this.currentTime;
+    },
     playPreviousSong: function() {
         var n = this.getPlayingSongIndex();
         if(!n || n <= 0) {
@@ -147,7 +184,7 @@ var SongDatabase = {
     },
     playNextSong: function() {
         var n = this.getPlayingSongIndex();
-        if(!n || n <= 0) {
+        if(typeof n === 'undefined' || n < 0) {
             n = 0;
         } else {
             n++;
@@ -204,6 +241,9 @@ var SongDatabase = {
         if(msg.song) {
             this.playingSong = msg.song;
         }
+        if(msg.ended && msg.ended === true) {
+            this.playNextSong();
+        }
         this.notify('status-update');
     }
 
@@ -236,7 +276,6 @@ var SongTableRow = React.createClass({
                    onClick={this.clicked}
                    onDoubleClick={this.doubleClicked}
             >
-            <td>{song.track.no}</td>
             <td>{song.title}</td>
             <td>{dur.minutes()}:{dur.seconds()}</td>
             <td>{song.artist}</td>
@@ -304,7 +343,6 @@ var ScrollTable = React.createClass({
             <div id="wrapper">
                 <table tabIndex="0">
                     <thead>
-                    <th>Track #</th>
                     <th>Name</th>
                     <th>Time</th>
                     <th>Artist</th>
@@ -340,7 +378,9 @@ var MusicDisplay = React.createClass({
             title:'---',
             artist:'---',
             album:'---',
-            playing: false
+            playing: false,
+            currentTime:0,
+            duration:100
         }
     },
     componentDidMount: function() {
@@ -355,14 +395,21 @@ var MusicDisplay = React.createClass({
                 album: song.album,
                 playing: playing
             });
-        })
+        });
+        SongDatabase.onChange('current-time',function() {
+            self.setState({
+                duration:SongDatabase.getPlayingSong().duration,
+                currentTime: SongDatabase.getCurrentTime()
+            });
+        });
     },
     render: function() {
-        return (<div className="vbox align-center" id="music-display">
-            <span className="grow" id="display-song">{this.state.title}</span>
-            <span id="display-artist">{this.state.artist} - {this.state.album}</span>
-            <progress min="0" max="100" value="20"/>
-            <span id='playing-state'>{this.state.playing?"playing":"still"}</span>
+        return (
+            <div className="vbox align-center" id="music-display">
+                <span className="grow" id="display-song">{this.state.title}</span>
+                <span id="display-artist">{this.state.artist} - {this.state.album}</span>
+                <progress min="0" max={this.state.duration} value={this.state.currentTime}/>
+                <span id='playing-state'>{this.state.playing?"playing":"still"}</span>
             </div>)
     }
 });
@@ -377,12 +424,89 @@ var sources = [
     { type: 'source', title:'10 Most Played', icon:'fa fa-gears fa-fw'},
 ];
 
+var columnInfo = [
+    {
+        id: "play",
+        title: "",
+        resizable: false,
+        width: '20px',
+        sortable:false
+    },
+    {
+        id:'number',
+        title:'#',
+        resizable: false,
+        width: '20px',
+        sortable:true
+    },
+    {
+        id:'title',
+        title:'Title',
+        resizable:true,
+        sortable:true,
+        width:'200px'
+    },
+    {
+        id:'duration',
+        title:'Time',
+        sortable:true,
+        resizable:true,
+        width:'50px'
+    },
+    {
+        id:'album',
+        title:'Album',
+        sortable:true,
+        resizable:true,
+        width:'200px'
+    },
+    {
+        id:'artist',
+        title:'Artist',
+        sortable:true,
+        resizable:true,
+        width:'150px'
+    },
+    {
+        id:'genre',
+        title:'Genre',
+        sortable:true,
+        resizable:true,
+        width:'100px'
+    }
+];
+
+var SongCellCustomizer = function(song, column) {
+    if(column.id == 'number') {
+        var n = ' ';
+        if(song.track && song.track.no) {
+            n = song.track.no;
+        }
+        return <td>{n}</td>
+    }
+    if(column.id == 'play') {
+        if(SongDatabase.isPlaying() && SongDatabase.getPlayingSong()._id == song._id) {
+            return <td><i className="fa fa-volume-up"></i></td>
+        }
+        return <td>&nbsp;</td>
+    }
+    if(column.id == 'duration') {
+        var dur = moment.duration(song.duration,'seconds');
+        return <td>{dur.minutes()}:{dur.seconds()}</td>
+    }
+    return <td>{song[column.id]}</td>;
+};
+
 var MainView = React.createClass({
     getInitialState: function() {
         return {
             playing: false,
             artists: [],
-            songs:[]
+            songs:[],
+            stats: {
+                songCount:0,
+                diskSize:0
+            }
         }
     },
     componentDidMount: function() {
@@ -391,6 +515,15 @@ var MainView = React.createClass({
             SongDatabase.getArtists(function(artists) {
                 self.setState({
                     artists:artists
+                })
+            });
+            SongDatabase.getArchiveStats(function(stats) {
+                d(stats);
+                self.setState({
+                    stats: {
+                        songCount: stats.count,
+                        diskSize: stats.filesize
+                    }
                 })
             });
         });
@@ -418,8 +551,35 @@ var MainView = React.createClass({
             })
         });
     },
+    selectSong: function(song) {
+        SongDatabase.setSelectedSong(song);
+        SongDatabase.setCurrentPlayset(this.state.songs);
+    },
+    doubleClickedSong: function(song) {
+        SongDatabase.playSong(song);
+    },
+    sortChanged: function(column,order) {
+        function asc(a,b){
+            if(a > b) return 1;
+            if(a < b) return -1;
+            return 0;
+        }
+        function desc(a,b){
+            if(a < b) return 1;
+            if(a > b) return -1;
+            return 0;
+        }
+        this.state.songs.sort(function(a,b) {
+            if(order == 'asc') return asc(a[column.id],b[column.id]);
+            if(order == 'des') return desc(a[column.id],b[column.id]);
+            return 1;
+        });
+        this.setState({
+            songs: this.state.songs
+        });
+    },
     render: function() {
-       var playButtonClass = "fa no-bg";
+        var playButtonClass = "fa no-bg";
        if(SongDatabase.isPlaying()) {
            playButtonClass += " fa-pause";
        } else {
@@ -453,7 +613,15 @@ var MainView = React.createClass({
                     <CustomList items={this.state.artists} onSelect={this.selectArtist}/>
                 </ResizableColumn>
                 <div className='vbox grow'>
-                    <ScrollTable items={this.state.songs}/>
+                    <ScrollingTable
+                        items={this.state.songs}
+                        columnInfo={columnInfo}
+                        onSelectRow={this.selectSong}
+                        doubleClicked={this.doubleClickedSong}
+                        onEnterPressed={this.doubleClickedSong}
+                        onSortChange={this.sortChanged}
+                        cellCustomizer={SongCellCustomizer}
+                        />
                 </div>
             </div>
             <footer id="main-footer">
@@ -461,7 +629,7 @@ var MainView = React.createClass({
                 <button className="fa fa-random no-bg"></button>
                 <button className="fa fa-repeat no-bg"></button>
                 <span className="grow"></span>
-                <span>3333 items, 105 hrs total time, 21GB</span>
+                <span>{this.state.stats.songCount} songs, {(this.state.stats.diskSize/1024/1024).toFixed(2)} MB</span>
                 <span className="grow"></span>
                 <button className="fa fa-eject no-bg"></button>
             </footer>

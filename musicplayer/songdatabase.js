@@ -68,11 +68,33 @@ exports.getArtists = function(cb) {
 
 exports.getSongsForArtist = function(artist,cb) {
     db.find({artist:artist}).sort({'track.no':1}).exec(function(err, docs) {
+        docs.forEach(function(doc) {
+            //dont transfer picture metadata
+            if(doc.picture) {
+                delete doc.picture;
+            }
+        });
         if(cb) cb(null, docs);
     });
 };
 
+exports.getArchiveStats = function(cb) {
+    db.find({}).exec(function(err,docs) {
+        if(err) throw err;
+        var filesize = 0;
+        docs.forEach(function(doc) {
+            if(doc.filesize) filesize += doc.filesize;
+        });
+        var stats = {
+            count: docs.length,
+            filesize: filesize
+        };
+        if(cb) cb(null, stats);
+    });
+};
+
 exports.startMP3Scan = function(win) {
+    var songs = [];
     window = win;
     var start_path = "/Users/josh/Music/iTunes/iTunes Media/Music";
     //var start_path = "/Volumes/PieHole/Mp3Archive/iTunes/Yes";
@@ -87,7 +109,10 @@ exports.startMP3Scan = function(win) {
         console.log("mp3 files to process = ", files.length);
         //generate promises
         //return q_map(files,qParseMP3);
-        return q_seq_map(files, qParseMP3);
+        return q_seq_map(files, qParseMP3)
+            .then(q_seq_map(files,stripBadFields))
+            .then(q_seq_map(files,checkSize));
+        //return q_seq_map(files, stripBadFields);
     }).then(function () {
         console.log("all done! database length =", songs.length);
         finalizeLoading(win);
@@ -95,6 +120,54 @@ exports.startMP3Scan = function(win) {
         console.log('an error happened',e);
     });
 
+    function checkSize(file) {
+        return Q.promise(function(resolve,reject,notify) {
+            db.find({file:file}, function(err,docs) {
+                if(err) throw err;
+                if(docs.length <=0) return resolve();
+                if(typeof docs[0].filesize == 'undefined') {
+                    console.log("we need the file size for " + file);
+                    fs.stat(file, function(err,stat) {
+                        console.log(stat);
+                        db.update({file:file},{$set:{ filesize:stat.size }}, function(err,num){
+                            if(err)throw err;
+                            console.log("updated",num);
+                            resolve();
+                            return;
+                        });
+                    });
+                } else {
+                    return resolve();
+                }
+            })
+        });
+    }
+
+    function stripBadFields(file) {
+        return Q.promise(function(resolve,reject,notify) {
+            db.find({file:file}, function(err,docs) {
+                if(err) throw err;
+                //console.log("docs = ", docs);
+                if(docs.length <= 0) {
+                    resolve();
+                    return;
+                }
+
+                if(typeof docs[0].picture !== 'undefined') {
+                    console.log("updating");
+                    db.update({file:file},{$unset:{picture:true}},{}, function(err,num) {
+                        if(err)throw err;
+                        console.log("updated",num);
+                        resolve();
+                        return;
+                    });
+                } else {
+                    resolve();
+                    return;
+                }
+            });
+        });
+    }
     function qParseMP3(file) {
         return Q.Promise(function (resolve, reject, notify) {
             db.find({file:file},function(err,docs) {
@@ -120,28 +193,10 @@ exports.startMP3Scan = function(win) {
         });
     }
 
-    var songs = [];
-
-    function generateUID() {
-        return "id_"+Math.floor(Math.random()*1000*1000*1000);
-    }
-
     function addMP3ToDatabase(file, info) {
         console.log('inserting',info.title);
-        /*
-         if (tags.title) tags.title = tags.title.replace(/\0/g, '');
-         if (tags.artist) tags.artist = tags.artist.replace(/\0/g, '');
-         if (tags.album) tags.album = tags.album.replace(/\0/g, '');
-         */
         info.file = file;
         db.insert(info);
-        /*
-        songs.push(info);
-        if(win) win.remote({
-            type:'song-added',
-            song: info
-        });
-        */
     }
 
 }
