@@ -73,18 +73,29 @@ var ListModel = {
         }
     ],
     getItems: function(source) {
-        console.log("getting items",source);
         if(source == null) return [];
         if(source.type == 'all') {
             return this.items;
         }
+        if(source.type == 'deleted') {
+            return this.items.filter(function(item) {
+                return item.deleted === true;
+            });
+        }
+        if(source.type == 'completed') {
+            return this.items.filter(function(item) {
+                return item.completed === true;
+            });
+        }
         if(source.type == 'time') {
             return this.items.filter(function (item) {
+                if(item.deleted === true) return false;
                 return item.scheduled === source.id;
             });
         }
         if(source.type == 'tag') {
             return this.items.filter(function (item) {
+                if(item.deleted === true) return false;
                 return item.tags.indexOf(source.id) >= 0;
             });
         }
@@ -123,30 +134,39 @@ var ListModel = {
                 id:'later',
                 title:'Later',
                 icon:'fa-star-o'
+            },
+            {
+                type:'completed',
+                id:'completed',
+                title:'Completed',
+                icon:''
+            },
+            {
+                type:'deleted',
+                id:'deleted',
+                title:'Trash',
+                icon:''
             }
         ]
     },
     getTags: function() {
-        return [
-            {
+        var tags = {};
+        this.items.forEach(function(item) {
+            if(item.deleted === true) return;
+            item.tags.forEach(function(tag) {
+                tags[tag] = tag;
+            });
+        });
+        var tags_array = [];
+        for(var tag in tags) {
+            tags_array.push({
                 type:'tag',
-                id: "home",
-                title:'Home',
+                id:tag,
+                title:tag,
                 icon:'fa-tag'
-            },
-            {
-                type:'tag',
-                id:"travel",
-                title:'Travel',
-                icon:'fa-tag'
-            },
-            {
-                type:'tag',
-                id:'work',
-                title:'Work',
-                icon:'fa-tag'
-            }
-        ];
+            });
+        }
+        return tags_array;
     },
 
     findItemIndexById: function(id) {
@@ -185,6 +205,11 @@ var ListModel = {
     setScheduled: function(id, sched) {
         var item = this.findItemById(id);
         item.scheduled = sched;
+        this.notify();
+    },
+    deleteItem: function(sid) {
+        var item = this.findItemById(sid);
+        item.deleted = true;
         this.notify();
     }
 };
@@ -423,6 +448,17 @@ var MainView = React.createClass({
         })
     },
     keyPressed: function(e) {
+        if(e.metaKey == true) {
+            if(e.key == 'Backspace' || e.key == 'Delete') {
+                var index = this.state.selectedIndex;
+                var child = this.refs['child'+index];
+                var sid = child.props.item.id;
+                ListModel.deleteItem(sid);
+                e.stopPropagation();
+                e.preventDefault();
+                return;
+            }
+        }
         if(e.metaKey == true && e.key == 'ArrowDown') {
             var len = ListModel.getItems(this.state.currentSource).length;
             if(this.state.selectedIndex >= len-1) return;
