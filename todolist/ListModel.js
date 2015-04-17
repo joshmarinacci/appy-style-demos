@@ -117,13 +117,13 @@ var ListModel = {
                 type:'completed',
                 id:'completed',
                 title:'Completed',
-                icon:''
+                icon:'fa-check-square-o'
             },
             {
                 type:'deleted',
                 id:'deleted',
                 title:'Trash',
-                icon:''
+                icon:'fa-trash-o'
             }
         ]
     },

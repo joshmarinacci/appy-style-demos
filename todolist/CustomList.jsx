@@ -11,6 +11,7 @@ var ListItem = React.createClass({
     },
     clicked: function(e) {
         e.preventDefault();
+        console.log('selected');
         this.props.setSelected(this.props.index);
     },
     dragStart: function(e) {
@@ -42,20 +43,11 @@ var ListItem = React.createClass({
             bounds: rect
         });
     },
-    toggleCompleted: function() {
-        ListModel.toggleCompleted(this.props.item.id);
-    },
-    setToday: function() {
-        ListModel.setScheduled(this.props.item.id,'today');
-    },
-    setTomorrow: function() {
-        ListModel.setScheduled(this.props.item.id,'tomorrow');
-    },
-    setLater: function() {
-        ListModel.setScheduled(this.props.item.id,'later');
-    },
     render: function() {
         var cn = "";
+        if(this.props.index == this.props.selectedIndex) {
+            cn += " selected";
+        }
         if(this.props.dropTarget == this.props.item) {
             if(this.props.dropY <= 30) {
                 cn += ' drop-target-top';
@@ -63,9 +55,7 @@ var ListItem = React.createClass({
                 cn += ' drop-target-bottom';
             }
         }
-        if(this.props.index == this.props.selectedIndex) {
-            cn += " selected";
-        }
+
         return <li
             ref="item"
             draggable="true"
@@ -141,11 +131,17 @@ var CustomList = React.createClass({
         var child = this.refs['child'+index];
         var dom = React.findDOMNode(child);
         dom.focus();
+        if(this.props.onSelect) {
+            this.props.onSelect(child.props.item,index);
+        }
     },
     getSelectedItem: function() {
         var index = this.state.selectedIndex;
         var child = this.refs['child'+index];
         return child.props.item;
+    },
+    dragStart: function() {
+        console.log('starting a drag');
     },
     dragOver: function(info) {
         this.setState({
@@ -176,12 +172,11 @@ var CustomList = React.createClass({
         if(e.metaKey == true && e.key == 'ArrowDown') {
             var len = this.props.items.length;
             if(this.state.selectedIndex >= len-1) return;
+            var schild = this.getSelectedItem();
             var index = this.state.selectedIndex;
-            var child = this.refs['child'+index];
-            var sid = child.props.item.id;
-            child = this.refs['child'+(index+1)];
+            var child = this.refs['child'+(index+1)];
             var tid = child.props.item.id;
-            ListModel.moveItemAfter(sid,tid);
+            ListModel.moveItemAfter(schild.id,tid);
             this.setSelected(this.state.selectedIndex+1);
             e.stopPropagation();
             e.preventDefault();
@@ -190,11 +185,10 @@ var CustomList = React.createClass({
         if(e.metaKey == true && e.key == 'ArrowUp') {
             if(this.state.selectedIndex <= 0) return;
             var index = this.state.selectedIndex;
-            var child = this.refs['child'+index];
-            var sid = child.props.item.id;
-            child = this.refs['child'+(index-1)];
+            var schild = this.getSelectedItem();
+            var child = this.refs['child'+(index-1)];
             var tid = child.props.item.id;
-            ListModel.moveItemBefore(sid,tid);
+            ListModel.moveItemBefore(schild.id,tid);
             this.setSelected(this.state.selectedIndex-1);
             e.stopPropagation();
             e.preventDefault();
@@ -216,13 +210,29 @@ var CustomList = React.createClass({
             this.props.onKeyDown(e);
         }
     },
+    doKeyDown: function() {
+        console.log('doing a key down');
+    },
     render: function() {
+        var temp = this.props.template;
+        var self = this;
+        var kids = this.props.items.map(function(item,i) {
+            var c2 =  React.cloneElement(temp, {
+                key:item.id,
+                ref:'child'+i,
+                index:i,
+                item:item,
+                setSelected: self.setSelected,
+                selectedIndex: self.state.selectedIndex,
+            });
+            console.log("keydown = ", c2.props);
+            return c2;
+        });
+        return (<ul className="list scroll grow" onKeyDown={this.keyPressed}>{kids}</ul>);
+        /*
         var self = this;
         var items = this.props.items.map(function(item,i) {
             return <ListItem key={item.id}
-                             item={item}
-                             ref={'child'+i}
-                             index={i}
                              onDragOver={self.dragOver}
                              onDragEnd={self.dragEnd}
                              dropTarget={self.state.dropTarget}
@@ -230,11 +240,8 @@ var CustomList = React.createClass({
                              onDrop={self.drop}
                              selectedIndex={self.state.selectedIndex}
                              setSelected={self.setSelected}
-                />
-        });
-        return <ul className="list scroll grow"
-                   onKeyDown={this.keyPressed}
-            >{items}</ul>
+                />;
+        });*/
     }
 });
 

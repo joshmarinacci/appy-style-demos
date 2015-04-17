@@ -23,15 +23,22 @@ var ListModel = require('./ListModel');
 var CustomList = require('./CustomList.jsx');
 
 var SourceItem = React.createClass({
-    clicked: function(v) {
-        this.props.onSelect(this.props.item);
+    clicked: function(e) {
+        if(this.props.item.header == true) return;
+
+        e.stopPropagation();
+        this.props.setSelected(this.props.index);
     },
     render: function() {
         var cn = "fa fa-fw " + this.props.item.icon;
-        return (<li key={this.props.item.id}
-                    onClick={this.clicked}>
-            <i className={cn}></i>
-            {this.props.item.title}</li>);
+        if(this.props.item.header == true) {
+            return <li className='header'>{this.props.item.title}</li>;
+        }
+        var cn2 = "";
+        if(this.props.index == this.props.selectedIndex) {
+            cn2 += " selected";
+        }
+        return (<li className={cn2} key={this.props.item.id} onClick={this.clicked}><i className={cn}></i>{this.props.item.title}</li>);
     }
 });
 
@@ -89,6 +96,94 @@ var ItemInput = React.createClass({
     }
 });
 
+var TodoItemView = React.createClass({
+    clicked: function(e) {
+        e.stopPropagation();
+        this.props.setSelected(this.props.index);
+    },
+    setToday: function() {
+        ListModel.setScheduled(this.props.item.id,'today');
+    },
+    setTomorrow: function() {
+        ListModel.setScheduled(this.props.item.id,'tomorrow');
+    },
+    setLater: function() {
+        ListModel.setScheduled(this.props.item.id,'later');
+    },
+    toggleCompleted: function() {
+        ListModel.toggleCompleted(this.props.item.id);
+    },
+    dragStart: function(e) {
+        console.log("starting to drag");
+        /*
+        e.dataTransfer.setData('text/plain', this.props.item.id);
+        this.setState({
+            dragging:true
+        });
+        */
+    },
+    render: function() {
+        var item = this.props.item;
+        var cn = "";
+        if(this.props.index == this.props.selectedIndex) {
+            cn += " selected";
+        }
+        return <li
+            ref="item"
+            draggable="true"
+            //onDragStart={this.dragStart}
+            //onDragEnd={this.dragEnd}
+            //onDragOver={this.dragOver}
+            //onDrop={this.drop}
+            onDragStart={this.dragStart}
+            onClick={this.clicked}
+            tabIndex="1"
+            className={cn}
+            >
+            <input type='checkbox'
+                   checked={item.completed}
+                   onChange={this.toggleCompleted}
+                ></input>
+            <div className="contents">
+                <div className="contents">
+                    <div className="text">{item.text}</div>
+                    <div className="tags">
+                        <i className="fa fa-tag"></i> {item.tags.map(function(tag) {
+                        return <span key={tag}> {tag}, </span>
+                    })}
+                    </div>
+                </div>
+            </div>
+            <div className="group">
+                <input type='radio'
+                       name={item.id+'time'}
+                       ref="scheduled"
+                       className="button fa fa-star"
+                       value=""
+                       checked={item.scheduled=='today'}
+                       onChange={this.setToday}
+                    ></input>
+                <input type='radio'
+                       name={item.id+'time'}
+                       ref="scheduled"
+                       className="button fa fa-star-half-empty"
+                       checked={item.scheduled=='tomorrow'}
+                       onChange={this.setTomorrow}
+                       value=""
+                    ></input>
+                <input type='radio'
+                       name={item.id+'time'}
+                       ref="scheduled"
+                       className="button fa fa-star-o"
+                       checked={item.scheduled=='later'}
+                       onChange={this.setLater}
+                       value=""
+                    ></input>
+            </div>
+        </li>
+    }
+});
+
 var MainView = React.createClass({
     getInitialState: function() {
         return {
@@ -103,9 +198,10 @@ var MainView = React.createClass({
         })
     },
     sourceSelected: function(item) {
+        console.log('selected source',item);
         this.setState({
             currentSource: item
-        })
+        });
     },
     keyPressed: function(e) {
         if (e.metaKey == true) {
@@ -122,15 +218,15 @@ var MainView = React.createClass({
         }
     },
     render: function() {
-        var self = this;
         var todoItems = ListModel.getItems(this.state.currentSource);
-        var times = ListModel.getTimes().map(function(time) {
-            return <SourceItem key={time.id} item={time} onSelect={self.sourceSelected}/>
-        });
-        var tags = ListModel.getTags().map(function(tag) {
-            return <SourceItem key={tag.id} item={tag} onSelect={self.sourceSelected}/>
-        });
-
+        var times = [{
+            id:'when',
+            title:'When',
+            header:true
+        }]
+            .concat(ListModel.getTimes())
+            .concat([{ id:'categories',title:'Categories',header:true}])
+            .concat(ListModel.getTags());
         return(
         <div className="vbox fill">
             <header>
@@ -139,18 +235,20 @@ var MainView = React.createClass({
             </header>
             <div className="hbox grow">
                 <div className="vbox" id="sources-pane">
-                    <ul className="list scroll grow">
-                        <li className="header">When</li>
-                        {times}
-                        <li className="header">Categories</li>
-                        {tags}
-                    </ul>
+                    <CustomList
+                        ref='list'
+                        items={times}
+                        onSelect={this.sourceSelected}
+                        template={<SourceItem/>}
+                        >
+                        </CustomList>
                 </div>
                 <div className="vbox grow" id="list-view">
                     <ItemInput time={this.state.currentSource}/>
                     <CustomList
                         ref='list'
                         items={todoItems}
+                        template={<TodoItemView/>}
                         onKeyDown={this.keyPressed}
                         />
                 </div>
