@@ -25,7 +25,6 @@ var CustomList = require('./CustomList.jsx');
 var SourceItem = React.createClass({
     clicked: function(e) {
         if(this.props.item.header == true) return;
-
         e.stopPropagation();
         this.props.setSelected(this.props.index);
     },
@@ -98,7 +97,6 @@ var ItemInput = React.createClass({
 
 var TodoItemView = React.createClass({
     clicked: function(e) {
-        e.stopPropagation();
         this.props.setSelected(this.props.index);
     },
     setToday: function() {
@@ -113,31 +111,16 @@ var TodoItemView = React.createClass({
     toggleCompleted: function() {
         ListModel.toggleCompleted(this.props.item.id);
     },
-    dragStart: function(e) {
-        console.log("starting to drag");
-        /*
-        e.dataTransfer.setData('text/plain', this.props.item.id);
-        this.setState({
-            dragging:true
-        });
-        */
-    },
     render: function() {
         var item = this.props.item;
         var cn = "";
         if(this.props.index == this.props.selectedIndex) {
             cn += " selected";
         }
+        cn += " " + this.props.className;
         return <li
-            ref="item"
+            {...this.props}
             draggable="true"
-            //onDragStart={this.dragStart}
-            //onDragEnd={this.dragEnd}
-            //onDragOver={this.dragOver}
-            //onDrop={this.drop}
-            onDragStart={this.dragStart}
-            onClick={this.clicked}
-            tabIndex="1"
             className={cn}
             >
             <input type='checkbox'

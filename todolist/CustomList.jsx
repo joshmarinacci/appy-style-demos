@@ -1,17 +1,51 @@
+/*
+
+This is a customizable list component.  To use the defaults, just set the items property
+to an array of objects. Each item will be rendered using that item's toString() function.
+This allows you to customize the formatting of the list element.
+
+If you need to do something more complex, like add buttons or custom layout to each item,
+then set the template property to a custom React component. This component
+will be copied for each item, and given an item property.  example:
+
+// lets draw list items with font awesome icons.
+
+var items = [
+    {text:'foo', 'fa fa-star'},
+    {text:'bar', 'fa fa-check'}
+];
+
+var IconItemTemplate = React.createClass({
+    render: function() {
+        return <li {...this.props}>{this.props.item.text}
+            <i className={this.props.item.iconClass}></i></li>
+    }
+});
+
+<CustomList items={items} prototype={<IconItemTemplate/>} />
+
+To let the user rearrange the items by dragging, set the HTML 5 draggable property
+to true in your template.
+
+*/
+
 var React = require('react');
 var ListModel = require('./ListModel');
 
+var DefaultItemTemplate = React.createClass({
+    render: function() {
+        return <li draggable='true' {...this.props}>{this.props.item.toString()}</li>
+    }
+});
 
 var ListItem = React.createClass({
     getInitialState: function() {
         return {
             dragging: false,
-            under:false
         }
     },
     clicked: function(e) {
         e.preventDefault();
-        console.log('selected');
         this.props.setSelected(this.props.index);
     },
     dragStart: function(e) {
@@ -20,27 +54,27 @@ var ListItem = React.createClass({
             dragging:true
         });
     },
+    dragOver: function(e) {
+        e.preventDefault();
+        var rect = this.refs.item.getDOMNode().getBoundingClientRect();
+        this.props.parentDragOver({
+            item: this.props.item,
+            clientX:e.clientX,
+            clientY:e.clientY,
+            bounds: rect
+        });
+    },
     dragEnd: function(e) {
         e.preventDefault();
     },
     drop: function(e) {
         var rect = this.refs.item.getDOMNode().getBoundingClientRect();
-        this.props.onDrop({
+        this.props.parentDrop({
             itemid: e.dataTransfer.getData('text/plain'),
             clientX:e.clientX,
             clientY:e.clientY,
             bounds: rect,
             dropid: this.props.item.id
-        });
-    },
-    dragOver: function(e) {
-        e.preventDefault();
-        var rect = this.refs.item.getDOMNode().getBoundingClientRect();
-        this.props.onDragOver({
-            item: this.props.item,
-            clientX:e.clientX,
-            clientY:e.clientY,
-            bounds: rect
         });
     },
     render: function() {
@@ -56,58 +90,26 @@ var ListItem = React.createClass({
             }
         }
 
-        return <li
-            ref="item"
-            draggable="true"
-            onDragStart={this.dragStart}
-            onDragEnd={this.dragEnd}
-            onDragOver={this.dragOver}
-            onDrop={this.drop}
-            onClick={this.clicked}
-            tabIndex="1"
-            className={cn}
-            >
-            <input type='checkbox'
-                   checked={this.props.item.completed}
-                   onChange={this.toggleCompleted}
-                ></input>
-            <div className="contents">
-                <div className="contents">
-                    <div className="text">{this.props.item.text}</div>
-                    <div className="tags">
-                        <i className="fa fa-tag"></i> {this.props.item.tags.map(function(tag) {
-                        return <span key={tag}> {tag}, </span>
-                    })}
-                    </div>
-                </div>
-            </div>
-            <div className="group">
-                <input type='radio'
-                       name={this.props.item.id+'time'}
-                       ref="scheduled"
-                       className="button fa fa-star"
-                       value=""
-                       checked={this.props.item.scheduled=='today'}
-                       onChange={this.setToday}
-                    ></input>
-                <input type='radio'
-                       name={this.props.item.id+'time'}
-                       ref="scheduled"
-                       className="button fa fa-star-half-empty"
-                       checked={this.props.item.scheduled=='tomorrow'}
-                       onChange={this.setTomorrow}
-                       value=""
-                    ></input>
-                <input type='radio'
-                       name={this.props.item.id+'time'}
-                       ref="scheduled"
-                       className="button fa fa-star-o"
-                       checked={this.props.item.scheduled=='later'}
-                       onChange={this.setLater}
-                       value=""
-                    ></input>
-            </div>
-        </li>
+        var temp = <DefaultItemTemplate/>
+        if(this.props.template) temp = this.props.template;
+        return React.cloneElement(temp, {
+            ref:'item',
+            tabIndex:"1",
+            item: this.props.item,
+            index: this.props.index,
+            selectedIndex: this.props.selectedIndex,
+            setSelected: this.props.setSelected,
+            onDragStart:this.dragStart,
+            onDragEnd:this.dragEnd,
+            onDragOver: this.dragOver,
+            onDrop:this.drop,
+            parentDragOver: this.props.parentDragOver,
+            dropTarget: this.props.dropTarget,
+            dropY: this.props.dropY,
+            parentDrop: this.props.parentDrop,
+            onClick: this.clicked,
+            className:cn
+        });
     }
 });
 
@@ -140,9 +142,6 @@ var CustomList = React.createClass({
         var child = this.refs['child'+index];
         return child.props.item;
     },
-    dragStart: function() {
-        console.log('starting a drag');
-    },
     dragOver: function(info) {
         this.setState({
             dragging:true,
@@ -150,12 +149,7 @@ var CustomList = React.createClass({
             dropY:info.clientY-info.bounds.top
         });
     },
-    dragEnd: function(info) {
-        //console.log("drag ended",info);
-        //console.log("target item = ", info.item.text);
-    },
     drop: function(info) {
-        //console.log("dropped", info);
         var dropY = info.clientY - info.bounds.top;
         if(dropY < info.bounds.height/2) {
             ListModel.moveItemBefore(info.itemid,info.dropid);
@@ -210,38 +204,23 @@ var CustomList = React.createClass({
             this.props.onKeyDown(e);
         }
     },
-    doKeyDown: function() {
-        console.log('doing a key down');
-    },
     render: function() {
-        var temp = this.props.template;
         var self = this;
         var kids = this.props.items.map(function(item,i) {
-            var c2 =  React.cloneElement(temp, {
-                key:item.id,
-                ref:'child'+i,
-                index:i,
-                item:item,
-                setSelected: self.setSelected,
-                selectedIndex: self.state.selectedIndex,
-            });
-            console.log("keydown = ", c2.props);
-            return c2;
+            return (<ListItem key={item.id}
+                              item={item}
+                              index={i}
+                              ref={'child'+i}
+                              parentDragOver={self.dragOver}
+                              dropTarget={self.state.dropTarget}
+                              dropY={self.state.dropY}
+                              parentDrop={self.drop}
+                              selectedIndex={self.state.selectedIndex}
+                              setSelected={self.setSelected}
+                              template={self.props.template}
+                />);
         });
         return (<ul className="list scroll grow" onKeyDown={this.keyPressed}>{kids}</ul>);
-        /*
-        var self = this;
-        var items = this.props.items.map(function(item,i) {
-            return <ListItem key={item.id}
-                             onDragOver={self.dragOver}
-                             onDragEnd={self.dragEnd}
-                             dropTarget={self.state.dropTarget}
-                             dropY={self.state.dropY}
-                             onDrop={self.drop}
-                             selectedIndex={self.state.selectedIndex}
-                             setSelected={self.setSelected}
-                />;
-        });*/
     }
 });
 
